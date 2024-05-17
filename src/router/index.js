@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { useLayoutStore } from "@/stores/layout";
 import HomeView from "@/views/Home/HomeView.vue";
 import MapView from "@/views/Map/MapView.vue";
 import MypageView from "@/views/User/MypageView.vue";
@@ -46,6 +47,16 @@ const router = createRouter({
       component: SignUpView,
     },
   ],
+});
+
+router.beforeEach((to, from, next) => {
+  const layoutStore = useLayoutStore();
+  if (to.meta.hideHeader) {
+    layoutStore.toggleHeader(false);
+  } else {
+    layoutStore.toggleHeader(true);
+  }
+  next();
 });
 
 export default router;
