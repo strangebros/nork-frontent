@@ -1,9 +1,113 @@
-<script setup></script>
+<script setup>
+import { ref } from "vue";
+
+const theme = ref("dark");
+const themeIconClass = ref("fas fa-moon");
+
+const toggleTheme = () => {
+  if (theme.value === "dark") {
+    theme.value = "light";
+    themeIconClass.value = "fas fa-moon rotating-icon";
+    setTimeout(() => {
+      themeIconClass.value = "fas fa-sun rotating-icon";
+    }, 250); // Halfway through the animation (0.25s)
+  } else {
+    theme.value = "dark";
+    themeIconClass.value = "fas fa-sun rotating-icon";
+    setTimeout(() => {
+      themeIconClass.value = "fas fa-moon rotating-icon";
+    }, 250); // Halfway through the animation (0.25s)
+  }
+
+  // Remove the rotation class after the animation is complete
+  setTimeout(() => {
+    themeIconClass.value =
+      theme.value === "dark" ? "fas fa-moon" : "fas fa-sun";
+  }, 500); // Rotation animation duration
+};
+</script>
 
 <template>
-  <div>
-    <h1>Header 컴포넌트 입니다.</h1>
-  </div>
+  <header class="header">
+    <router-link to="/" class="logo">
+      <img src="@/assets/img/logo/navbar_logo.svg" alt="Logo" />
+    </router-link>
+    <div class="right-section">
+      <button class="theme-button" @click="toggleTheme">
+        <i :class="themeIconClass"></i>
+      </button>
+      <router-link to="/login" class="login-button">로그인</router-link>
+    </div>
+  </header>
 </template>
 
-<style scoped></style>
+<style scoped>
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #f5f5f5;
+}
+
+.logo img {
+  height: 50px;
+  cursor: pointer;
+}
+
+.right-section {
+  display: flex;
+  align-items: center;
+}
+
+.theme-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: #5271ff;
+  margin-right: 20px;
+}
+
+.rotating-icon {
+  animation: rotate 0.5s cubic-bezier(0.42, 0, 0.58, 1);
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.login-button {
+  background-color: #5271ff;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .logo img {
+    height: 40px;
+  }
+
+  .theme-button {
+    margin: 10px 0;
+  }
+
+  .login-button {
+    padding: 8px 16px;
+  }
+}
+</style>
