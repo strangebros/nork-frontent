@@ -3,10 +3,31 @@ import { ref } from "vue";
 import { useThemeStore } from '@/stores/theme';
 
 const themeStore = useThemeStore();
+const themeIconClass = ref(themeStore.darkMode ? "fas fa-sun" : "fas fa-moon");
 
-// const toggleTheme = () => {
+
+const toggleTheme = () => {
+  let prevDark = themeStore.darkMode;
+  themeStore.toggleTheme();
   
-// };
+  if (prevDark) {
+    themeIconClass.value = "fas fa-sun rotating-icon";
+    setTimeout(() => {
+      themeIconClass.value = "fas fa-moon rotating-icon";
+    }, 250); // Halfway through the animation (0.25s)
+  } else {
+    themeIconClass.value = "fas fa-moon rotating-icon";
+    setTimeout(() => {
+      themeIconClass.value = "fas fa-sun rotating-icon";
+    }, 250); // Halfway through the animation (0.25s)
+  }
+
+  // Remove the rotation class after the animation is complete
+  setTimeout(() => {
+    themeIconClass.value =
+    prevDark ? "fas fa-moon" : "fas fa-sun";
+  }, 500); // Rotation animation duration
+};
 </script>
 
 <template>
@@ -18,7 +39,6 @@ const themeStore = useThemeStore();
       <button class="theme-button" @click="toggleTheme">
         <i :class="themeIconClass"></i>
       </button>
-      <p class="bg-background-light dark:bg-background-dark">asdasd</p>
       <router-link to="/login" class="login-button">로그인</router-link>
     </div>
   </header>
