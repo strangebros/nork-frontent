@@ -26,7 +26,7 @@ const login = async () => {
   <main class="login-container">
     <div class="login-box">
       <img
-        src="@/assets/img/logo/웹페이지용-1(컨텐츠).svg"
+        src="@/assets/img/logo/content_logo.svg"
         alt="Logo"
         class="login-logo"
       />
