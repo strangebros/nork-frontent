@@ -1,34 +1,16 @@
 <script setup>
 import { ref } from "vue";
+import { useThemeStore } from '@/stores/theme';
 
-const theme = ref("dark");
-const themeIconClass = ref("fas fa-moon");
+const themeStore = useThemeStore();
 
-const toggleTheme = () => {
-  if (theme.value === "dark") {
-    theme.value = "light";
-    themeIconClass.value = "fas fa-moon rotating-icon";
-    setTimeout(() => {
-      themeIconClass.value = "fas fa-sun rotating-icon";
-    }, 250); // Halfway through the animation (0.25s)
-  } else {
-    theme.value = "dark";
-    themeIconClass.value = "fas fa-sun rotating-icon";
-    setTimeout(() => {
-      themeIconClass.value = "fas fa-moon rotating-icon";
-    }, 250); // Halfway through the animation (0.25s)
-  }
-
-  // Remove the rotation class after the animation is complete
-  setTimeout(() => {
-    themeIconClass.value =
-      theme.value === "dark" ? "fas fa-moon" : "fas fa-sun";
-  }, 500); // Rotation animation duration
-};
+// const toggleTheme = () => {
+  
+// };
 </script>
 
 <template>
-  <header class="header">
+  <header class="header" :class="{ dark: themeStore.darkMode }">
     <router-link to="/" class="logo">
       <img src="@/assets/img/logo/navbar_logo.svg" alt="Logo" />
     </router-link>
@@ -36,6 +18,7 @@ const toggleTheme = () => {
       <button class="theme-button" @click="toggleTheme">
         <i :class="themeIconClass"></i>
       </button>
+      <p class="bg-background-light dark:bg-background-dark">asdasd</p>
       <router-link to="/login" class="login-button">로그인</router-link>
     </div>
   </header>
