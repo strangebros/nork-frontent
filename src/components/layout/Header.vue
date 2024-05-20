@@ -1,11 +1,26 @@
 <script setup>
 import { ref } from "vue";
 import { useThemeStore } from "@/stores/theme";
+import { useAuthStore } from "@/stores/auth";
+import memberApi from "@/api/memberApi";
 import { storeToRefs } from "pinia";
 
 const themeStore = useThemeStore();
+const authStore = useAuthStore();
 const { darkMode } = storeToRefs(themeStore);
+const { member } = storeToRefs(authStore);
 const themeIconClass = ref(darkMode ? "fas fa-sun" : "fas fa-moon");
+
+let memberInfo = ref({});
+if (member.value != null) {
+  memberApi.getMemberInfo(
+    member.value.id,
+    (response) => {
+      memberInfo.value = response.data.data;
+    },
+    (error) => {}
+  );
+}
 
 const toggleTheme = () => {
   let prevDark = darkMode;
@@ -43,7 +58,9 @@ const toggleTheme = () => {
         >
           <i :class="themeIconClass"></i>
         </button>
+
         <router-link
+          v-if="memberInfo == null"
           to="/login"
           class="login-button bg-primary-light dark:bg-primary-dark text-onPrimary-light dark:text-onPrimary-dark"
           >로그인</router-link
