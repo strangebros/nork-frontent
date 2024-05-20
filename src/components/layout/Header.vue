@@ -1,17 +1,16 @@
 <script setup>
 import { ref } from "vue";
-import { useThemeStore } from '@/stores/theme';
+import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
 
 const themeStore = useThemeStore();
-const {darkMode} = storeToRefs(themeStore);
+const { darkMode } = storeToRefs(themeStore);
 const themeIconClass = ref(darkMode ? "fas fa-sun" : "fas fa-moon");
-
 
 const toggleTheme = () => {
   let prevDark = darkMode;
   themeStore.toggleTheme();
-  
+
   if (prevDark) {
     themeIconClass.value = "fas fa-sun rotating-icon";
     setTimeout(() => {
@@ -26,8 +25,7 @@ const toggleTheme = () => {
 
   // Remove the rotation class after the animation is complete
   setTimeout(() => {
-    themeIconClass.value =
-    prevDark ? "fas fa-moon" : "fas fa-sun";
+    themeIconClass.value = prevDark ? "fas fa-moon" : "fas fa-sun";
   }, 500); // Rotation animation duration
 };
 </script>
@@ -35,16 +33,23 @@ const toggleTheme = () => {
 <template>
   <div :class="{ dark: darkMode }">
     <header class="header bg-header-light dark:bg-header-dark">
-    <router-link to="/" class="logo">
-      <img src="@/assets/img/logo/navbar_logo.svg" alt="Logo" />
-    </router-link>
-    <div class="right-section">
-      <button class="theme-button color-primary-light dark:color-primary-dark" @click="toggleTheme">
-        <i :class="themeIconClass "></i>
-      </button>
-      <router-link to="/login" class="login-button bg-primary-light dark:bg-primary-dark text-onPrimary-light dark:text-onPrimary-dark">로그인</router-link>
-    </div>
-  </header>
+      <router-link to="/" class="logo">
+        <img src="@/assets/img/logo/navbar_logo.svg" alt="Logo" />
+      </router-link>
+      <div class="right-section">
+        <button
+          class="theme-button color-primary-light dark:color-primary-dark"
+          @click="toggleTheme"
+        >
+          <i :class="themeIconClass"></i>
+        </button>
+        <router-link
+          to="/login"
+          class="login-button bg-primary-light dark:bg-primary-dark text-onPrimary-light dark:text-onPrimary-dark"
+          >로그인</router-link
+        >
+      </div>
+    </header>
   </div>
 </template>
 
