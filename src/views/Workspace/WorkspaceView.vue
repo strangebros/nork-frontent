@@ -1,7 +1,13 @@
-<script setup></script>
+<script setup>
+import { useThemeStore } from '@/stores/theme';
+import { storeToRefs } from 'pinia';
+
+const themeStore = useThemeStore();
+const {darkMode} = storeToRefs(themeStore);
+</script>
 
 <template>
-  <div>
+  <div :class="{ dark:darkMode }">
     <h1>workspace 페이지 입니다.</h1>
   </div>
 </template>

@@ -1,44 +1,51 @@
 <script setup>
 import { ref } from "vue";
+import { useThemeStore } from '@/stores/theme';
+import { storeToRefs } from "pinia";
 
-const theme = ref("dark");
-const themeIconClass = ref("fas fa-moon");
+const themeStore = useThemeStore();
+const {darkMode} = storeToRefs(themeStore);
+const themeIconClass = ref(darkMode ? "fas fa-sun" : "fas fa-moon");
+
 
 const toggleTheme = () => {
-  if (theme.value === "dark") {
-    theme.value = "light";
-    themeIconClass.value = "fas fa-moon rotating-icon";
-    setTimeout(() => {
-      themeIconClass.value = "fas fa-sun rotating-icon";
-    }, 250); // Halfway through the animation (0.25s)
-  } else {
-    theme.value = "dark";
+  let prevDark = darkMode;
+  themeStore.toggleTheme();
+  
+  if (prevDark) {
     themeIconClass.value = "fas fa-sun rotating-icon";
     setTimeout(() => {
       themeIconClass.value = "fas fa-moon rotating-icon";
+    }, 250); // Halfway through the animation (0.25s)
+  } else {
+    themeIconClass.value = "fas fa-moon rotating-icon";
+    setTimeout(() => {
+      themeIconClass.value = "fas fa-sun rotating-icon";
     }, 250); // Halfway through the animation (0.25s)
   }
 
   // Remove the rotation class after the animation is complete
   setTimeout(() => {
     themeIconClass.value =
-      theme.value === "dark" ? "fas fa-moon" : "fas fa-sun";
+    prevDark ? "fas fa-moon" : "fas fa-sun";
   }, 500); // Rotation animation duration
 };
 </script>
 
 <template>
-  <header class="header">
+  <div :class="{ dark: darkMode }">
+    <header class="header bg-header-light dark:bg-header-dark">
     <router-link to="/" class="logo">
       <img src="@/assets/img/logo/navbar_logo.svg" alt="Logo" />
     </router-link>
     <div class="right-section">
-      <button class="theme-button" @click="toggleTheme">
-        <i :class="themeIconClass"></i>
+      <button class="theme-button color-primary-light dark:color-primary-dark" @click="toggleTheme">
+        <i :class="themeIconClass "></i>
       </button>
-      <router-link to="/login" class="login-button">로그인</router-link>
+      <router-link to="/login" class="login-button bg-primary-light dark:bg-primary-dark text-onPrimary-light dark:text-onPrimary-dark">로그인</router-link>
     </div>
   </header>
+  </div>
 </template>
 
 <style scoped>
@@ -47,7 +54,6 @@ const toggleTheme = () => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #f5f5f5;
 }
 
 .logo img {
@@ -86,8 +92,6 @@ const toggleTheme = () => {
 }
 
 .login-button {
-  background-color: #5271ff;
-  color: white;
   padding: 10px 20px;
   border-radius: 5px;
   text-decoration: none;

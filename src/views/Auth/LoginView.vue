@@ -2,9 +2,14 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { useThemeStore } from '@/stores/theme';
+import { storeToRefs } from "pinia";
 
+const themeStore = useThemeStore();
 const authStore = useAuthStore();
 const router = useRouter();
+
+const {darkMode} = storeToRefs(themeStore);
 
 const loginForm = ref({
   id: "",
@@ -23,10 +28,10 @@ const login = async () => {
 </script>
 
 <template>
-  <main class="login-container">
+  <main class="login-container" :class="{ dark: darkMode }">
     <div class="login-box">
       <img
-        src="@/assets/img/logo/웹페이지용-1(컨텐츠).svg"
+        src="@/assets/img/logo/content_logo.svg"
         alt="Logo"
         class="login-logo"
       />
