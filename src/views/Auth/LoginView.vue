@@ -2,17 +2,17 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
-import { useThemeStore } from '@/stores/theme';
+import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
 
 const themeStore = useThemeStore();
 const authStore = useAuthStore();
 const router = useRouter();
 
-const {darkMode} = storeToRefs(themeStore);
+const { darkMode } = storeToRefs(themeStore);
 
 const loginForm = ref({
-  id: "",
+  email: "",
   password: "",
 });
 
@@ -28,8 +28,11 @@ const login = async () => {
 </script>
 
 <template>
-  <main class="login-container" :class="{ dark: darkMode }">
-    <div class="login-box">
+  <div
+    class="login-container bg-background-light dark:bg-background-dark"
+    :class="{ dark: darkMode }"
+  >
+    <div class="login-box bg-background-light dark:bg-background-light">
       <img
         src="@/assets/img/logo/content_logo.svg"
         alt="Logo"
@@ -40,7 +43,7 @@ const login = async () => {
         <label>
           <input
             type="text"
-            v-model.trim="loginForm.id"
+            v-model.trim="loginForm.email"
             required
             placeholder="아이디"
             class="login-input"
@@ -62,7 +65,7 @@ const login = async () => {
         <router-link to="/signUp" class="signup-link">회원가입하기</router-link>
       </p>
     </div>
-  </main>
+  </div>
 </template>
 
 <style scoped>
@@ -71,7 +74,6 @@ const login = async () => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f5f5f5;
 }
 
 .login-box {
@@ -79,7 +81,6 @@ const login = async () => {
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
