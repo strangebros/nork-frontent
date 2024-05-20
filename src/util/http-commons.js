@@ -4,9 +4,9 @@ import { httpStatusCode } from "./http-status";
 const { BACKEND_URL } = import.meta.env;
 
 // local vue api axios instance
-function norkAxios() {
+function norkAxios(path) {
   const instance = axios.create({
-    baseURL: BACKEND_URL,
+    baseURL: `${BACKEND_URL}${path}`,
   });
 
   // request default settings
