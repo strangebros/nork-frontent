@@ -32,7 +32,7 @@ const toggleTheme = () => {
 
 <template>
   <div :class="{ dark: themeStore.darkMode }">
-    <header class="header" >
+    <header class="header bg-header-light dark:bg-header-dark">
     <router-link to="/" class="logo">
       <img src="@/assets/img/logo/navbar_logo.svg" alt="Logo" />
     </router-link>
@@ -52,7 +52,6 @@ const toggleTheme = () => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #f5f5f5;
 }
 
 .logo img {

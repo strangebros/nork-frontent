@@ -10,45 +10,50 @@ export default {
     extend: {
       colors: {
         primary: {
-          light: '#133DCF',
-          dark: '#B9C3FF'
+          light: '#5271FF', // 밝은 모드의 primary 색상
+          dark: '#4056B4' // 어두운 모드의 primary 색상 (조금 더 어둡게 조정)
         },
         secondary: {
-          light: '#2D5FA2',
-          dark: '#C4D8FF'
+          light: '#89B6FF', // 밝은 모드의 secondary 색상
+          dark: '#6F91CC' // 어두운 모드의 secondary 색상 (조금 더 어둡게 조정)
         },
         background: {
-          light: '#FBF8FF',
-          dark: '#12131B'
+          light: '#F5F5F5', // 밝은 모드의 background 색상 (neutral)
+          dark: '#1E1E1E' // 어두운 모드의 background 색상 (어두운 회색으로 조정)
         },
         surface: {
-          light: '#FCF8F8',
-          dark: '#141313'
+          light: '#FFFFFF', // 밝은 모드의 surface 색상 (흰색)
+          dark: '#121212' // 어두운 모드의 surface 색상 (아주 어두운 회색)
         },
         error: {
-          light: '#B81D27',
-          dark: '#FFB3AE'
+          light: '#FF5252', // 밝은 모드의 error 색상
+          dark: '#CC4141' // 어두운 모드의 error 색상 (조금 더 어둡게 조정)
+        },
+        header: {
+          light: '#E0E0E0',
+          dark: '#2A2A2A'
         },
         onPrimary: {
-          light: '#FFFFFF',
-          dark: '#00228B'
+          light: '#FFFFFF', // primary 배경에서의 텍스트 색상 (흰색)
+          dark: '#FFFFFF' // 어두운 모드에서도 흰색으로 유지
         },
         onSecondary: {
-          light: '#FFFFFF',
-          dark: '#003062'
+          light: '#FFFFFF', // secondary 배경에서의 텍스트 색상 (흰색)
+          dark: '#FFFFFF' // 어두운 모드에서도 흰색으로 유지
         },
         onBackground: {
-          light: '#1A1B23',
-          dark: '#E2E1ED'
+          light: '#000000', // background 배경에서의 텍스트 색상 (검은색)
+          dark: '#FFFFFF' // 어두운 모드의 background 배경에서의 텍스트 색상 (흰색)
         },
         onSurface: {
-          light: '#1C1B1B',
-          dark: '#E5E2E1'
+          light: '#000000', // surface 배경에서의 텍스트 색상 (검은색)
+          dark: '#FFFFFF' // 어두운 모드의 surface 배경에서의 텍스트 색상 (흰색)
         },
         onError: {
-          light: '#FFFFFF',
-          dark: '#68000C'
-        }
+          light: '#FFFFFF', // error 배경에서의 텍스트 색상 (흰색)
+          dark: '#FFFFFF' // 어두운 모드에서도 흰색으로 유지
+        },
+        
       }
     }
   },
@@ -57,4 +62,3 @@ export default {
   },
   plugins: [],
 }
-
