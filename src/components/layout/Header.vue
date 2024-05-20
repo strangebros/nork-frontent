@@ -1,9 +1,13 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useThemeStore } from "@/stores/theme";
 import { useAuthStore } from "@/stores/auth";
 import memberApi from "@/api/memberApi";
 import { storeToRefs } from "pinia";
+
+// drop down
+import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
+import { ChevronDownIcon } from "@heroicons/vue/20/solid";
 
 const themeStore = useThemeStore();
 const authStore = useAuthStore();
@@ -11,7 +15,22 @@ const { darkMode } = storeToRefs(themeStore);
 const { member } = storeToRefs(authStore);
 const themeIconClass = ref(darkMode ? "fas fa-sun" : "fas fa-moon");
 
-let memberInfo = ref({});
+let memberInfo = ref(null);
+watch(member, (newValue, prevValue) => {
+  if (newValue == null) {
+    memberInfo.value = null;
+    return;
+  }
+
+  memberApi.getMemberInfo(
+    newValue.id,
+    (response) => {
+      memberInfo.value = response.data.data;
+    },
+    (error) => {}
+  );
+});
+
 if (member.value != null) {
   memberApi.getMemberInfo(
     member.value.id,
@@ -21,6 +40,11 @@ if (member.value != null) {
     (error) => {}
   );
 }
+
+const logout = () => {
+  authStore.logout();
+  memberInfo.value = null;
+};
 
 const toggleTheme = () => {
   let prevDark = darkMode;
@@ -56,9 +80,66 @@ const toggleTheme = () => {
           class="theme-button color-primary-light dark:color-primary-dark"
           @click="toggleTheme"
         >
-          <i :class="themeIconClass"></i>
+          <i :class="themeIconClass" class="mr-3"></i>
         </button>
+        <Menu
+          v-if="memberInfo != null"
+          as="div"
+          class="relative inline-block text-left"
+        >
+          <div>
+            <MenuButton
+              class="inline-flex border border-grey dark:border-header-dark justify-center rounded-full bg-black/20 h-11 w-11 hover:bg-black/30 focus:outline-none"
+            >
+              <img
+                class="rounded-full"
+                :src="`data:image/png;base64,${memberInfo.profileImage}`"
+              />
+            </MenuButton>
+          </div>
 
+          <transition
+            enter-active-class="transition duration-100 ease-out"
+            enter-from-class="transform scale-95 opacity-0"
+            enter-to-class="transform scale-100 opacity-100"
+            leave-active-class="transition duration-75 ease-in"
+            leave-from-class="transform scale-100 opacity-100"
+            leave-to-class="transform scale-95 opacity-0"
+          >
+            <MenuItems
+              class="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+            >
+              <div class="px-1 py-1">
+                <MenuItem v-slot="{ active }">
+                  <button
+                    :class="[
+                      active
+                        ? 'bg-primary-light dark:bg-primary-dark text-white'
+                        : 'text-primary-900',
+                      'group flex w-full items-center rounded-md px-2 py-2 text-sm',
+                    ]"
+                  >
+                    마이페이지
+                  </button>
+                </MenuItem>
+              </div>
+
+              <div class="px-1 py-1">
+                <MenuItem v-slot="{ active }">
+                  <button
+                    @click.prevent="logout"
+                    :class="[
+                      active ? 'bg-red-500 text-white' : 'text-red-900',
+                      'group flex w-full items-center rounded-md px-2 py-2 text-sm',
+                    ]"
+                  >
+                    로그아웃
+                  </button>
+                </MenuItem>
+              </div>
+            </MenuItems>
+          </transition>
+        </Menu>
         <router-link
           v-if="memberInfo == null"
           to="/login"
@@ -94,7 +175,6 @@ const toggleTheme = () => {
   cursor: pointer;
   font-size: 24px;
   color: #5271ff;
-  margin-right: 20px;
 }
 
 .rotating-icon {
@@ -119,7 +199,7 @@ const toggleTheme = () => {
   text-decoration: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 350px) {
   .header {
     flex-direction: column;
   }
