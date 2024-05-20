@@ -2,7 +2,9 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { useThemeStore } from '@/stores/theme';
 
+const themeStore = useThemeStore();
 const authStore = useAuthStore();
 const router = useRouter();
 
@@ -23,7 +25,7 @@ const login = async () => {
 </script>
 
 <template>
-  <main class="login-container">
+  <main class="login-container" :class="{ dark: themeStore.darkMode }">
     <div class="login-box">
       <img
         src="@/assets/img/logo/content_logo.svg"

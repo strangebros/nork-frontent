@@ -31,17 +31,19 @@ const toggleTheme = () => {
 </script>
 
 <template>
-  <header class="header" :class="{ dark: themeStore.darkMode }">
+  <div :class="{ dark: themeStore.darkMode }">
+    <header class="header" >
     <router-link to="/" class="logo">
       <img src="@/assets/img/logo/navbar_logo.svg" alt="Logo" />
     </router-link>
     <div class="right-section">
-      <button class="theme-button" @click="toggleTheme">
-        <i :class="themeIconClass"></i>
+      <button class="theme-button color-primary-light dark:color-primary-dark" @click="toggleTheme">
+        <i :class="themeIconClass "></i>
       </button>
-      <router-link to="/login" class="login-button">로그인</router-link>
+      <router-link to="/login" class="login-button bg-primary-light dark:bg-primary-dark text-onPrimary-light dark:text-onPrimary-dark">로그인</router-link>
     </div>
   </header>
+  </div>
 </template>
 
 <style scoped>
@@ -89,8 +91,6 @@ const toggleTheme = () => {
 }
 
 .login-button {
-  background-color: #5271ff;
-  color: white;
   padding: 10px 20px;
   border-radius: 5px;
   text-decoration: none;
