@@ -1,13 +1,15 @@
 <script setup>
 import { ref } from "vue";
 import { useThemeStore } from '@/stores/theme';
+import { storeToRefs } from "pinia";
 
 const themeStore = useThemeStore();
-const themeIconClass = ref(themeStore.darkMode ? "fas fa-sun" : "fas fa-moon");
+const {darkMode} = storeToRefs(themeStore);
+const themeIconClass = ref(darkMode ? "fas fa-sun" : "fas fa-moon");
 
 
 const toggleTheme = () => {
-  let prevDark = themeStore.darkMode;
+  let prevDark = darkMode;
   themeStore.toggleTheme();
   
   if (prevDark) {
@@ -31,7 +33,7 @@ const toggleTheme = () => {
 </script>
 
 <template>
-  <div :class="{ dark: themeStore.darkMode }">
+  <div :class="{ dark: darkMode }">
     <header class="header bg-header-light dark:bg-header-dark">
     <router-link to="/" class="logo">
       <img src="@/assets/img/logo/navbar_logo.svg" alt="Logo" />
