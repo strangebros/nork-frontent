@@ -12,4 +12,4 @@ export const useThemeStore = defineStore('theme', () => {
         darkMode,
         toggleTheme,
     };
-});
+}, {persist: true});
