@@ -3,6 +3,8 @@ import { useRouter } from "vue-router";
 import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
 
+import tmapApi from "@/api/tmapApi";
+
 // tailwind
 import { ref, computed } from "vue";
 import {
@@ -24,28 +26,19 @@ const router = useRouter();
 const { darkMode } = storeToRefs(themeStore);
 
 // searchbar start
-const results = [
-  { id: 1, name: "Wade Cooper" },
-  { id: 2, name: "Arlene Mccoy" },
-  { id: 3, name: "Devon Webb" },
-  { id: 4, name: "Tom Cook" },
-  { id: 5, name: "Tanya Fox" },
-  { id: 6, name: "Hellen Schmidt" },
-];
+const results = ref([]);
 
-let selectedQuery = ref(-1);
+const search = async () => {
+  if (query.value == "") {
+    selectedQuery.value = "";
+  }
+
+  results.value = await tmapApi.getResultNames(query.value);
+};
+
+let selectedQuery = ref("");
 let query = ref("");
 
-let filteredPeople = computed(() =>
-  query.value === ""
-    ? results
-    : results.filter((person) =>
-        person.name
-          .toLowerCase()
-          .replace(/\s+/g, "")
-          .includes(query.value.toLowerCase().replace(/\s+/g, ""))
-      )
-);
 // searchbar end
 
 // options start
@@ -112,14 +105,19 @@ const selectedKeyword = ref(keywordOptions[0]);
                 <ComboboxInput
                   class="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
                   :displayValue="
-                    (index) => {
-                      if (index >= 0) {
-                        return results[index].name;
+                    (q) => {
+                      if (q != '') {
+                        return q;
                       }
-                      return '어떤 장소를 찾으시나요?';
+                      return null;
                     }
                   "
-                  @change="query = $event.target.value"
+                  autocomplete="off"
+                  placeholder="어떤 장소를 찾으시나요?"
+                  @change="
+                    query = $event.target.value;
+                    search();
+                  "
                 />
                 <ComboboxButton
                   class="absolute inset-y-0 right-0 flex items-center pr-2"
@@ -140,17 +138,17 @@ const selectedKeyword = ref(keywordOptions[0]);
                   class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
                 >
                   <div
-                    v-if="filteredPeople.length === 0 && query !== ''"
+                    v-if="results.length === 0 && query !== ''"
                     class="relative cursor-default select-none px-4 py-2 text-gray-700"
                   >
-                    Nothing found.
+                    검색 결과가 없습니다.
                   </div>
 
                   <ComboboxOption
-                    v-for="person in filteredPeople"
+                    v-for="(result, index) in results"
                     as="template"
-                    :key="person.id"
-                    :value="person"
+                    :key="index"
+                    :value="result"
                     v-slot="{ selectedQuery, active }"
                   >
                     <li
@@ -167,7 +165,7 @@ const selectedKeyword = ref(keywordOptions[0]);
                           'font-normal': !selectedQuery,
                         }"
                       >
-                        {{ person.name }}
+                        {{ result }}
                       </span>
                       <span
                         v-if="selectedQuery"
@@ -327,7 +325,7 @@ const selectedKeyword = ref(keywordOptions[0]);
           아직 결정하지 못했다면,
           <RouterLink
             class="text-blue-700 dark:text-blue-300"
-            to="{name: 'myPage'}"
+            to="{name: 'Mypage'}"
             >내 지난 기록에서 찾아보세요.</RouterLink
           >
         </p>
