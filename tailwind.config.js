@@ -4,7 +4,9 @@ export default {
   content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}", "./src/App.vue"],
   theme: {
     extend: {
+      width: { "px-350": "350px", "px-500": "500px" },
       colors: {
+        text: "#424242",
         primary: {
           light: "#5271FF", // 밝은 모드의 primary 색상
           dark: "#4056B4", // 어두운 모드의 primary 색상 (조금 더 어둡게 조정)
