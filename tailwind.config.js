@@ -4,7 +4,15 @@ export default {
   content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}", "./src/App.vue"],
   theme: {
     extend: {
-      width: { "px-350": "350px", "px-500": "500px" },
+      transitionProperty: {
+        width: "width",
+      },
+      width: {
+        0: "0",
+        "350px": "350px",
+        "map-side": "calc(100vw - 350px)",
+        "map-noside": "100vw",
+      },
       colors: {
         text: "#424242",
         primary: {
