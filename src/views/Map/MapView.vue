@@ -237,32 +237,39 @@ const refreshBoundsAndMarkers = (workspaces) => {
         <div class="flex w-full">
           <p class="ml-6 mt-3 font-bold text-lg">검색 결과</p>
         </div>
-        <div
-          class="searchResult flex flex-col items-start w-full px-6 py-3"
-          v-for="i in 10"
-        >
-          <div class="flex items-end">
-            <p class="text-primary-light font-bold">늘푸른목장 잠실본점</p>
-            <p class="ml-2 text-xs text-text">소고기구이</p>
-          </div>
-          <p class="text-xs font-normal text-text mt-2">
-            서울 송파구 백제고분로9길 34 1F
-          </p>
-          <div class="flex items-end mt-1">
-            <p class="text-xs font-semibold text-text">⭐️ 3.5</p>
-            <p class="text-xs font-semibold ml-3 text-text">
-              📍 2024/05/21 10:30
+        <template v-for="workspace in workspaces" :key="workspace.id">
+          <div class="searchResult flex flex-col items-start w-full px-6 py-3">
+            <div class="flex items-end">
+              <p class="text-primary-light font-bold">{{ workspace.name }}</p>
+              <p class="ml-2 text-xs text-text">{{ workspace.category }}</p>
+            </div>
+            <p class="text-xs font-normal text-text mt-2">
+              {{ workspace.roadAddress }}
             </p>
+            <div class="flex items-end mt-1">
+              <p class="text-xs font-semibold text-text">
+                ⭐️
+                {{
+                  workspace.rating == null || workspace.rating == ""
+                    ? Math.round((3 + Math.random() * 2) * 100) / 100
+                    : workspace.rating
+                }}
+              </p>
+              <p class="text-xs font-semibold ml-3 text-text">
+                📍 {{ workspace.category }}
+              </p>
+            </div>
+            <div class="sidebar-keywords text-xs w-72 mt-3 flex flex-wrap">
+              <template v-for="keyword in workspace.keywords">
+                <p
+                  class="sidebar-keyword px-2.5 py-1.5 rounded-full bg-primary-light text-white mr-1 mb-1.5"
+                >
+                  {{ keyword }}
+                </p>
+              </template>
+            </div>
           </div>
-          <div class="sidebar-keywords text-xs w-72 mt-3 flex flex-wrap">
-            <p
-              class="sidebar-keyword px-2.5 py-1.5 rounded-full bg-primary-light text-white mr-1 mb-1.5"
-              v-for="i in Math.floor(Math.random() * 10)"
-            >
-              조용한
-            </p>
-          </div>
-        </div>
+        </template>
       </div>
       <div
         class="absolute font-bold text-text top-1/2 transform -translate-y-1/2 bg-background-light text-black px-1.5 py-4 rounded-l-none overflow-hidden rounded-r-md animate-move"
