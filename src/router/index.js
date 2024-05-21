@@ -59,4 +59,30 @@ router.beforeEach((to, from, next) => {
   next();
 });
 
+// 로그인 인터셉터
+router.beforeEach((to, from) => {
+  let auth = JSON.parse(localStorage.getItem("auth"));
+
+  // 로그인 된 상태에서 다시 로그인 & 회원 가입 페이지 이동 시도 시
+  if (["/login", "/signUp"].includes(to.path)) {
+    if (!(auth == null || auth.member == null || auth.member.role == "GUEST")) {
+      return { name: "home" };
+    }
+    return;
+  }
+
+  if (["/", "/map"].includes(to.path)) {
+    // 로그인 필요 X
+    return;
+  }
+
+  if (auth == null || auth.member == null || auth.member.role == "GUEST") {
+    // 로그인 필요
+    return { name: "Login" };
+  }
+
+  // 정상 작동
+  return;
+});
+
 export default router;
