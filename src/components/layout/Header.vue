@@ -4,7 +4,7 @@ import { useThemeStore } from "@/stores/theme";
 import { useAuthStore } from "@/stores/auth";
 import memberApi from "@/api/memberApi";
 import { storeToRefs } from "pinia";
-import defaultProfileImage from "@/assets/img/default_profile_image"
+import defaultProfileImage from "@/assets/img/default_profile_image";
 
 // drop down
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
@@ -23,6 +23,12 @@ watch(member, (newValue, prevValue) => {
     return;
   }
 
+  // GUEST 일 경우 무시
+  if (newValue.role == "GUEST") {
+    memberInfo.value = null;
+    return;
+  }
+
   memberApi.getMemberInfo(
     newValue.id,
     (response) => {
@@ -32,7 +38,7 @@ watch(member, (newValue, prevValue) => {
   );
 });
 
-if (member.value != null) {
+if (member.value != null && member.value.role != "GUEST") {
   memberApi.getMemberInfo(
     member.value.id,
     (response) => {
@@ -68,7 +74,6 @@ const toggleTheme = () => {
     themeIconClass.value = prevDark ? "fas fa-moon" : "fas fa-sun";
   }, 500); // Rotation animation duration
 };
-
 </script>
 
 <template>
@@ -95,7 +100,12 @@ const toggleTheme = () => {
             >
               <img
                 class="rounded-full"
-                :src="`data:image/png;base64,${(memberInfo.profileImage == null || memberInfo.profileImage == '') ? defaultProfileImage : memberInfo.profileImage}`"
+                :src="`data:image/png;base64,${
+                  memberInfo.profileImage == null ||
+                  memberInfo.profileImage == ''
+                    ? defaultProfileImage
+                    : memberInfo.profileImage
+                }`"
               />
             </MenuButton>
           </div>

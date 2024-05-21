@@ -59,4 +59,21 @@ router.beforeEach((to, from, next) => {
   next();
 });
 
+// 로그인 인터셉터
+router.beforeEach((to, from) => {
+  if (["/", "/login", "/signUp", "/map"].includes(to.path)) {
+    // 로그인 필요 X
+    return;
+  }
+
+  let auth = JSON.parse(localStorage.getItem("auth"));
+  if (auth == null || auth.member == null || auth.member.role == "GUEST") {
+    // 로그인 필요
+    return { name: "Login" };
+  }
+
+  // 정상 작동
+  return;
+});
+
 export default router;
