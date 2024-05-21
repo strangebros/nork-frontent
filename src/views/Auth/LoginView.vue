@@ -105,7 +105,7 @@ const login = async () => {
         </div>
       </Dialog>
     </TransitionRoot>
-    <div class="login-box bg-background-light dark:bg-background-light">
+    <div class="login-box w-96 bg-background-light dark:bg-background-light">
       <img
         src="@/assets/img/logo/content_logo.svg"
         alt="Logo"

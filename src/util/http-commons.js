@@ -20,49 +20,51 @@ function norkAxios(path) {
     (config) => {
       // token refresh 필요 여부 확인
       let auth = JSON.parse(localStorage.getItem("auth"));
-      let member = auth.member;
 
-      if (member != null) {
-        if (member.exp < Date.now() / 1000 + 10 * 60) {
-          axios
-            .post(
-              `${VITE_BACKEND_URL}/members/refresh-token`,
-              {
-                accessToken: auth.accessToken,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${auth.accessToken}`,
+      if (auth != null) {
+        let member = auth.member;
+        if (member != null) {
+          if (member.exp < Date.now() / 1000 + 10 * 60) {
+            axios
+              .post(
+                `${VITE_BACKEND_URL}/members/refresh-token`,
+                {
+                  accessToken: auth.accessToken,
                 },
-              }
-            )
-            .then((response) => {
-              // token refresh 성공
-              // 새로운 accessToken 저장
-              let data = response.data["data"];
-              localStorage.setItem(
-                "auth",
-                JSON.stringify({
-                  accessToken: data["accessToken"],
-                  member: jwtDecode(data["accessToken"]),
-                })
-              );
-            })
-            .catch((error) => {
-              // token refresh 실패
-              // 로그인 해제
-              localStorage.setItem(
-                "auth",
-                JSON.stringify({
-                  accessToken: null,
-                  member: null,
-                })
-              );
-              console.log(error);
-              console.log("token refresh에 실패했습니다.");
-            });
+                {
+                  headers: {
+                    Authorization: `Bearer ${auth.accessToken}`,
+                  },
+                }
+              )
+              .then((response) => {
+                // token refresh 성공
+                // 새로운 accessToken 저장
+                let data = response.data["data"];
+                localStorage.setItem(
+                  "auth",
+                  JSON.stringify({
+                    accessToken: data["accessToken"],
+                    member: jwtDecode(data["accessToken"]),
+                  })
+                );
+              })
+              .catch((error) => {
+                // token refresh 실패
+                // 로그인 해제
+                localStorage.setItem(
+                  "auth",
+                  JSON.stringify({
+                    accessToken: null,
+                    member: null,
+                  })
+                );
+                console.log(error);
+                console.log("token refresh에 실패했습니다.");
+              });
+          }
         }
-
+        
         if (auth.accessToken != null) {
           config.headers.Authorization = `Bearer ${auth.accessToken}`;
         }

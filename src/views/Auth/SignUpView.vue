@@ -1,9 +1,15 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
+import defaultProfileImage from "@/assets/img/default_profile_image";
+import VueCropper from "@ballcat/vue-cropper";
+import "cropperjs/dist/cropper.css";
+
+import base64 from "@/util/base64";
+
 import {
   TransitionRoot,
   TransitionChild,
@@ -24,16 +30,66 @@ const signupForm = ref({
   nickname: "",
   position: "",
   date: "",
+  profileImage: "",
 });
+
+// crop 전 임시 이미지
+const tempProfileImage = ref("");
+
+const vueCropperRef = ref(null);
+
+const cropperOptions = reactive({
+  aspectRatio: 1 / 1,
+  viewMode: 0,
+  responsive: true,
+  restore: true,
+  checkCrossOrigin: true,
+  checkOrientation: true,
+  modal: true,
+  guides: true,
+  center: true,
+  highlight: true,
+  background: true,
+  autoCrop: true,
+  movable: true,
+  rotatable: true,
+  scalable: true,
+  zoomable: false,
+  cropBoxMovable: true,
+  cropBoxResizable: true,
+  toggleDragModeOnDblclick: true,
+});
+
+onMounted(() => {});
 
 const isOpen = ref(false);
 
 function closeModal() {
   isOpen.value = false;
 }
+
+function profileImageConfirm() {
+  isOpen.value = false;
+  cropImage();
+}
+
 function openModal() {
   isOpen.value = true;
 }
+
+function cropImage() {
+  signupForm.value.profileImage = vueCropperRef.value
+    .getCroppedCanvas()
+    .toDataURL()
+    .split(",")[1];
+}
+
+const uploadProfileImage = (files) => {
+  base64(files[0], (e) => {
+    tempProfileImage.value = e.target.result.split(",")[1];
+    openModal();
+  });
+};
 
 const signup = async () => {
   let result = await authStore.signUp(signupForm.value);
@@ -85,21 +141,34 @@ const signup = async () => {
                   as="h3"
                   class="text-lg font-medium leading-6 text-gray-900"
                 >
-                  회원가입에 실패했습니다.
+                  프로필 이미지 등록
                 </DialogTitle>
                 <div class="mt-2">
-                  <p class="text-sm text-gray-500">
-                    아이디 또는 비밀번호를 확인 후 다시 시도해 주세요.
+                  <p class="text-sm text-gray-500 mb-3">
+                    등록을 원하는 부분을 지정해 주세요.
                   </p>
                 </div>
-
+                <div>
+                  <vue-cropper
+                    ref="vueCropperRef"
+                    :src="`data:image/png;base64,${tempProfileImage}`"
+                    v-bind="cropperOptions"
+                  />
+                </div>
                 <div class="mt-4">
                   <button
                     type="button"
                     class="inline-flex justify-center rounded-md border border-transparent bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-white hover:bg-opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    @click="profileImageConfirm"
+                  >
+                    등록
+                  </button>
+                  <button
+                    type="button"
+                    class="ml-2 inline-flex justify-center rounded-md border border-transparent bg-error-light dark:bg-error-dark px-4 py-2 text-sm font-medium text-white hover:bg-opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                     @click="closeModal"
                   >
-                    확인
+                    취소
                   </button>
                 </div>
               </DialogPanel>
@@ -108,62 +177,108 @@ const signup = async () => {
         </div>
       </Dialog>
     </TransitionRoot>
-    <div class="signup-box w-96 bg-background-light dark:bg-background-light">
+    <div
+      class="signup-box w-full sm:w-2/3 md:w-1/2 bg-background-light dark:bg-background-light"
+    >
       <img
         src="@/assets/img/logo/content_logo.svg"
         alt="Logo"
         class="signup-logo"
       />
       <h1 class="signup-title text-base">회원가입</h1>
-      <form @submit.prevent="signup" class="signup-form">
-        <label>
-          <input
-            type="text"
-            v-model.trim="signupForm.email"
-            required
-            placeholder="아이디"
-            class="signup-input"
-          />
-        </label>
-        <label>
-          <input
-            type="password"
-            v-model.trim="signupForm.password"
-            required
-            placeholder="비밀번호"
-            class="signup-input"
-          />
-        </label>
-        <label>
-          <input
-            type="text"
-            v-model.trim="signupForm.nickname"
-            required
-            placeholder="닉네임"
-            class="signup-input"
-          />
-        </label>
-        <label>
-          <input
-            type="text"
-            v-model.trim="signupForm.position"
-            required
-            placeholder="포지션"
-            class="signup-input"
-          />
-        </label>
-        <label class="text-xs font-semibold">
-          생년월일
-          <input
-            type="date"
-            v-model.trim="signupForm.birthdate"
-            required
-            placeholder="생년월일"
-            class="signup-input text-base font-normal mt-0.5"
-          />
-        </label>
+      <form @submit.prevent="signup" class="signup-form flex flex-col w-full">
+        <div class="flex">
+          <div class="w-1/2 flex flex-col">
+            <p class="text-xs font-semibold mb-0.5">프로필 이미지</p>
 
-        <input type="submit" value="회원가입" class="signup-button" />
+            <img
+              class="w-4/5 object-cover"
+              :src="`data:image/png;base64,${
+                signupForm.profileImage == ''
+                  ? defaultProfileImage
+                  : signupForm.profileImage
+              }`"
+              alt="프로필 이미지"
+            />
+            <input
+              type="file"
+              id="profile-image"
+              @change.prevent="uploadProfileImage($event.target.files)"
+              hidden
+            />
+            <label
+              class="mt-3 bg-primary-light dark:bg-primary-dark w-fit p-3 rounded-md text-white"
+              for="profile-image"
+              >등록</label
+            >
+          </div>
+          <div class="w-1/2 flex flex-col">
+            <label class="text-xs font-semibold mb-0.5" for="id">
+              아이디
+            </label>
+            <input
+              id="id"
+              type="text"
+              v-model.trim="signupForm.email"
+              required
+              placeholder="아이디"
+              class="signup-input"
+            />
+
+            <label class="text-xs font-semibold mb-0.5" for="password">
+              비밀번호
+            </label>
+            <input
+              id="password"
+              type="password"
+              v-model.trim="signupForm.password"
+              required
+              placeholder="비밀번호"
+              class="signup-input"
+            />
+
+            <label class="text-xs font-semibold mb-0.5" for="nickname">
+              닉네임
+            </label>
+
+            <input
+              id="nickname"
+              type="text"
+              v-model.trim="signupForm.nickname"
+              required
+              placeholder="닉네임"
+              class="signup-input"
+            />
+
+            <label class="text-xs font-semibold mb-0.5" for="position">
+              포지션
+            </label>
+            <input
+              id="position"
+              type="text"
+              v-model.trim="signupForm.position"
+              placeholder="포지션"
+              class="signup-input"
+            />
+
+            <label class="text-xs font-semibold mb-0.5" for="birthdate">
+              생년월일
+            </label>
+            <input
+              id="birthdate"
+              type="date"
+              v-model.trim="signupForm.birthdate"
+              placeholder="생년월일"
+              class="signup-input"
+            />
+          </div>
+        </div>
+
+        <input
+          type="submit"
+          value="회원가입"
+          class="signup-button text-white bg-primary-light dark:bg-primary-dark mt-3"
+        />
       </form>
     </div>
   </div>
@@ -197,12 +312,6 @@ const signup = async () => {
   color: #333;
 }
 
-.signup-form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
 .signup-input {
   width: 100%;
   padding: 10px;
@@ -214,8 +323,6 @@ const signup = async () => {
 .signup-button {
   width: 100%;
   padding: 10px;
-  background-color: #5271ff;
-  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
