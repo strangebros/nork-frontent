@@ -4,7 +4,17 @@ export default {
   content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}", "./src/App.vue"],
   theme: {
     extend: {
+      transitionProperty: {
+        width: "width",
+      },
+      width: {
+        0: "0",
+        "350px": "350px",
+        "map-side": "calc(100vw - 350px)",
+        "map-noside": "100vw",
+      },
       colors: {
+        text: "#424242",
         primary: {
           light: "#5271FF", // 밝은 모드의 primary 색상
           dark: "#4056B4", // 어두운 모드의 primary 색상 (조금 더 어둡게 조정)
