@@ -16,7 +16,7 @@ const tmapApi = {
         results = response.data.searchPoiInfo.pois.poi.map((poi) => poi.name);
       })
       .catch((error) => {
-        console.log(error);
+        // console.log(error);
       });
 
     return results;

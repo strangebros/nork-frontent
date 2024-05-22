@@ -19,55 +19,64 @@ import {
   RadioGroupDescription,
   RadioGroupOption,
 } from "@headlessui/vue";
-import { CheckIcon, ChevronDownIcon } from "@heroicons/vue/20/solid";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+  PencilSquareIcon,
+} from "@heroicons/vue/20/solid";
+import { useAuthStore } from "@/stores/auth";
 
+const authStore = useAuthStore();
+const { member } = storeToRefs(authStore);
 const themeStore = useThemeStore();
 const router = useRouter();
 const { darkMode } = storeToRefs(themeStore);
 
 // searchbar start
-const results = ref([]);
+let selectedQuery = ref("");
+let query = ref("");
 
-const search = async () => {
+const realResults = ref([]);
+const results = ref([query, realResults]);
+
+const search = async (newValue) => {
   if (query.value == "") {
     selectedQuery.value = "";
   }
 
-  results.value = await tmapApi.getResultNames(query.value);
+  realResults.value = await tmapApi.getResultNames(newValue);
 };
-
-let selectedQuery = ref("");
-let query = ref("");
 
 // searchbar end
 
 // options start
 const distanceOptions = [
   {
-    radius: "-1",
+    value: "0",
     label: "어디든 갈 수 있어요",
   },
   {
-    radius: "2",
+    value: "2",
     label: "우리 동네였으면 좋겠어요",
   },
   {
-    radius: "1",
+    value: "1",
     label: "집 앞도 가기 힘들어요",
   },
 ];
 
 const keywordOptions = [
   {
-    radius: "0",
+    value: "0",
     label: "조용한",
   },
   {
-    radius: "1",
+    value: "1",
     label: "시끄러운",
   },
   {
-    radius: "2",
+    value: "2",
     label: "신나는",
   },
 ];
@@ -78,23 +87,35 @@ const selectedKeyword = ref(keywordOptions[0]);
 </script>
 
 <template>
-  <div class="flex justify-center" :class="{ dark: darkMode }">
+  <div
+    class="flex justify-center overflow-y-hidden"
+    :class="{ dark: darkMode }"
+    style="height: calc(100vh - 70px)"
+  >
     <div class="flex flex-col w-5/6 sm:w-2/3 xl:w-1/2 justify-center">
+      <div class="flex justify-center w-full overflow-y-hidden">
+        <img
+          class="mb-20 w-56"
+          src="@/assets/img/logo/navbar_logo.svg"
+          alt="Logo"
+        />
+      </div>
       <div
         id="recommendWrapper"
-        class="flex justify-center items-center text-sm bg-gray-200 dark:bg-gray-700 rounded-lg mb-5 p-2 dark:text-white"
+        class="flex justify-center items-center text-sm bg-gray-200 dark:bg-gray-700 rounded-lg mb-5 px-2 py-4 dark:text-white"
       >
         <p class="mr-3">
-          gmelon님, 최근 <span class="font-semibold">'개발자'</span> 직군에서
-          핫한 장소들 어떠신가요?
+          <span v-if="member != null">{{ member.nickname }}님, </span>최근
+          <span class="font-semibold">'개발자'</span> 직군에서 핫한 장소들
+          어떠신가요?
         </p>
-        <button class="bg-primary-light text-white px-3 py-1.5 rounded-lg">
+        <button class="bg-primary-light text-white px-3 py-2 rounded-lg">
           추천받기
         </button>
       </div>
       <div
         id="searchWrapper"
-        class="flex items-center flex-col rounded-lg p-4 bg-gray-200 dark:bg-gray-700 dark:text-white"
+        class="flex items-center flex-col rounded-lg px-4 py-6 bg-gray-200 dark:bg-gray-700 dark:text-white"
       >
         <div id="searchBar" class="flex items-center mb-4">
           <Combobox v-model="selectedQuery" class="mr-3">
@@ -116,7 +137,7 @@ const selectedKeyword = ref(keywordOptions[0]);
                   placeholder="어떤 장소를 찾으시나요?"
                   @change="
                     query = $event.target.value;
-                    search();
+                    search($event.target.value);
                   "
                 />
                 <ComboboxButton
@@ -145,19 +166,35 @@ const selectedKeyword = ref(keywordOptions[0]);
                   </div>
 
                   <ComboboxOption
-                    v-for="(result, index) in results"
+                    v-for="(result, index) in [
+                      results[0].value,
+                      ...results[1].value,
+                    ]"
                     as="template"
                     :key="index"
                     :value="result"
                     v-slot="{ selectedQuery, active }"
                   >
                     <li
-                      class="relative cursor-default select-none py-2 pl-10 pr-4"
+                      class="relative flex items-center cursor-default select-none py-2 pl-4 pr-4"
                       :class="{
                         'bg-primary-light text-white': active,
                         'text-gray-900': !active,
                       }"
                     >
+                      <span class="mr-2">
+                        <MagnifyingGlassIcon
+                          v-if="index >= 1"
+                          class="h-4 w-4"
+                          aria-hidden="true"
+                        />
+                        <PencilSquareIcon
+                          v-if="index == 0"
+                          class="h-4 w-4"
+                          aria-hidden="true"
+                        />
+                      </span>
+
                       <span
                         class="block truncate"
                         :class="{
@@ -183,9 +220,21 @@ const selectedKeyword = ref(keywordOptions[0]);
               </TransitionRoot>
             </div>
           </Combobox>
-          <button class="bg-primary-light text-white px-3 py-1.5 rounded-lg">
-            검색
-          </button>
+
+          <RouterLink
+            :to="{
+              name: 'Map',
+              query: {
+                query: selectedQuery,
+                radius: selectedDistance.value,
+                keyword: selectedKeyword.label,
+              },
+            }"
+          >
+            <button class="bg-primary-light text-white px-5 py-1.5 rounded-lg">
+              검색
+            </button></RouterLink
+          >
         </div>
         <div id="searchOptions" class="flex justify-around">
           <div id="distanceOptions" class="w-48 max-w-md text-sm mr-3">

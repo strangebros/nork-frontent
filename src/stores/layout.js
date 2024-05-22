@@ -5,7 +5,7 @@ export const useLayoutStore = defineStore("layout", () => {
   const showHeader = ref(true);
 
   function toggleHeader(value) {
-    showHeader.value = value;
+    showHeader.value = true;
   }
 
   return {

@@ -1,10 +1,21 @@
 <script setup>
 import { ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { useThemeStore } from "@/stores/theme";
 import { useAuthStore } from "@/stores/auth";
 import memberApi from "@/api/memberApi";
 import { storeToRefs } from "pinia";
 import defaultProfileImage from "@/assets/img/default_profile_image";
+
+let route = useRoute();
+let isMain = ref(true);
+
+watch(
+  () => route.path,
+  (newValue) => {
+    isMain.value = newValue === "/";
+  }
+);
 
 // drop down
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
@@ -78,8 +89,18 @@ const toggleTheme = () => {
 
 <template>
   <div :class="{ dark: darkMode }">
-    <header class="header bg-header-light dark:bg-header-dark">
-      <router-link to="/" class="logo">
+    <header
+      class="header flex items-center"
+      :class="{
+        'bg-header-light': !isMain,
+        'dark:bg-header-dark': !isMain,
+        'bg-background-light': isMain,
+        'dark:bg-background-dark': isMain,
+        'justify-end': isMain,
+        'justify-between': !isMain,
+      }"
+    >
+      <router-link v-if="!isMain" to="/" class="logo">
         <img src="@/assets/img/logo/navbar_logo.svg" alt="Logo" />
       </router-link>
       <div class="right-section">
@@ -92,7 +113,7 @@ const toggleTheme = () => {
         <Menu
           v-if="memberInfo != null"
           as="div"
-          class="relative inline-block text-left"
+          class="relative inline-block text-left z-50"
         >
           <div>
             <MenuButton
@@ -165,9 +186,6 @@ const toggleTheme = () => {
 
 <style scoped>
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 10px 20px;
 }
 
