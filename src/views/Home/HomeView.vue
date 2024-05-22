@@ -25,7 +25,10 @@ import {
   MagnifyingGlassIcon,
   PencilSquareIcon,
 } from "@heroicons/vue/20/solid";
+import { useAuthStore } from "@/stores/auth";
 
+const authStore = useAuthStore();
+const { member } = storeToRefs(authStore);
 const themeStore = useThemeStore();
 const router = useRouter();
 const { darkMode } = storeToRefs(themeStore);
@@ -50,30 +53,30 @@ const search = async (newValue) => {
 // options start
 const distanceOptions = [
   {
-    radius: "-1",
+    value: "0",
     label: "어디든 갈 수 있어요",
   },
   {
-    radius: "2",
+    value: "2",
     label: "우리 동네였으면 좋겠어요",
   },
   {
-    radius: "1",
+    value: "1",
     label: "집 앞도 가기 힘들어요",
   },
 ];
 
 const keywordOptions = [
   {
-    radius: "0",
+    value: "0",
     label: "조용한",
   },
   {
-    radius: "1",
+    value: "1",
     label: "시끄러운",
   },
   {
-    radius: "2",
+    value: "2",
     label: "신나는",
   },
 ];
@@ -102,8 +105,9 @@ const selectedKeyword = ref(keywordOptions[0]);
         class="flex justify-center items-center text-sm bg-gray-200 dark:bg-gray-700 rounded-lg mb-5 px-2 py-4 dark:text-white"
       >
         <p class="mr-3">
-          gmelon님, 최근 <span class="font-semibold">'개발자'</span> 직군에서
-          핫한 장소들 어떠신가요?
+          <span v-if="member != null">{{ member.nickname }}님, </span>최근
+          <span class="font-semibold">'개발자'</span> 직군에서 핫한 장소들
+          어떠신가요?
         </p>
         <button class="bg-primary-light text-white px-3 py-2 rounded-lg">
           추천받기
@@ -216,9 +220,21 @@ const selectedKeyword = ref(keywordOptions[0]);
               </TransitionRoot>
             </div>
           </Combobox>
-          <button class="bg-primary-light text-white px-5 py-1.5 rounded-lg">
-            검색
-          </button>
+
+          <RouterLink
+            :to="{
+              name: 'Map',
+              query: {
+                query: selectedQuery,
+                radius: selectedDistance.value,
+                keyword: selectedKeyword.label,
+              },
+            }"
+          >
+            <button class="bg-primary-light text-white px-5 py-1.5 rounded-lg">
+              검색
+            </button></RouterLink
+          >
         </div>
         <div id="searchOptions" class="flex justify-around">
           <div id="distanceOptions" class="w-48 max-w-md text-sm mr-3">

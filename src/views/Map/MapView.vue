@@ -1,5 +1,5 @@
 <script setup>
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
 
@@ -27,6 +27,7 @@ import {
 
 const themeStore = useThemeStore();
 const router = useRouter();
+const route = useRoute();
 const { darkMode } = storeToRefs(themeStore);
 
 // searchbar start
@@ -110,14 +111,17 @@ function calculateRadius() {
 
 let workspaces = ref([]);
 let nowLoading = ref(false);
-const searchWorkspaces = async (move) => {
+const searchWorkspaces = async (move, radius) => {
   nowLoading.value = true;
   await workspaceApi.searchAll(
     {
       query: selectedQuery.value,
       latitude: map.value.getCenter().getLat(),
       longitude: map.value.getCenter().getLng(),
-      radius: Math.ceil(calculateRadius() >= 30 ? 0 : calculateRadius()),
+      radius:
+        radius == null
+          ? Math.ceil(calculateRadius() >= 30 ? 0 : calculateRadius())
+          : radius,
       categoty: "",
       page: 1,
       count: 30,
@@ -170,6 +174,16 @@ const map = ref();
 const onLoadKakaoMap = (mapRef) => {
   map.value = mapRef;
   currentBounds.value = new kakao.maps.LatLngBounds();
+
+  // 메인 페이지에서 넘어온 경우, 바로 검색 수행
+  if (route.query.query != null && route.query.query != "") {
+    // 값 설정
+    selectedQuery.value = route.query.query;
+    query.value = route.query.query;
+
+    // 검색 및 지도 이동
+    searchWorkspaces(true, route.query.radius);
+  }
 };
 // map options end
 const refreshBoundsAndMarkers = (workspaces, move) => {
