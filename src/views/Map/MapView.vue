@@ -30,18 +30,19 @@ const router = useRouter();
 const { darkMode } = storeToRefs(themeStore);
 
 // searchbar start
-const results = ref([]);
+let selectedQuery = ref("");
+let query = ref("");
 
-const search = async () => {
+const realResults = ref([]);
+const results = ref([query, realResults]);
+
+const search = async (newValue) => {
   if (query.value == "") {
     selectedQuery.value = "";
   }
 
-  results.value = [query.value, ...(await tmapApi.getResultNames(query.value))];
+  realResults.value = await tmapApi.getResultNames(newValue);
 };
-
-let selectedQuery = ref("");
-let query = ref("");
 
 const sidebarExpanded = ref(true);
 
@@ -352,7 +353,7 @@ const clickSearchBarWorkspace = (workspace) => {
                   placeholder="장소, 카테고리 검색"
                   @change="
                     query = $event.target.value;
-                    search();
+                    search($event.target.value);
                   "
                   @keyup.enter="searchWorkspaces"
                 />
@@ -382,7 +383,10 @@ const clickSearchBarWorkspace = (workspace) => {
                   </div>
 
                   <ComboboxOption
-                    v-for="(result, index) in results"
+                    v-for="(result, index) in [
+                      results[0].value,
+                      ...results[1].value,
+                    ]"
                     as="template"
                     :key="index"
                     :value="result"
