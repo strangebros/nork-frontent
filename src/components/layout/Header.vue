@@ -92,7 +92,7 @@ const toggleTheme = () => {
         <Menu
           v-if="memberInfo != null"
           as="div"
-          class="relative inline-block text-left"
+          class="relative inline-block text-left z-50"
         >
           <div>
             <MenuButton

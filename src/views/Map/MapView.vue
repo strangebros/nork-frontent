@@ -57,6 +57,56 @@ const toggleSidebar = (button) => {
 };
 // searchbar end
 
+function checkImageSrc(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+
+    img.onload = () => {
+      resolve(true); // 이미지 로드 성공
+    };
+
+    img.onerror = () => {
+      reject(false); // 이미지 로드 실패
+    };
+
+    img.src = url;
+  });
+}
+
+function calculateRadius() {
+  const { Ma: lat1, La: lon1 } = map.value.getBounds().getSouthWest();
+  const { Ma: lat2, La: lon2 } = map.value.getBounds().getNorthEast();
+
+  // 지구의 반지름 (미터 단위)
+  const R = 6371000;
+
+  // 라디안 단위로 변환
+  const toRadians = (degree) => degree * (Math.PI / 180);
+
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+
+  const lat1Rad = toRadians(lat1);
+  const lat2Rad = toRadians(lat2);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLon / 2) *
+      Math.sin(dLon / 2) *
+      Math.cos(lat1Rad) *
+      Math.cos(lat2Rad);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  // 대원거리 계산 (두 점 사이의 거리)
+  const distance = R * c;
+
+  // 반경은 대각선의 절반
+  const radius = distance / 2;
+
+  return radius / 1000;
+}
+
 let workspaces = ref([]);
 const searchWorkspaces = async () => {
   await workspaceApi.searchAll(
@@ -64,15 +114,16 @@ const searchWorkspaces = async () => {
       query: selectedQuery.value,
       latitude: map.value.getCenter().getLat(),
       longitude: map.value.getCenter().getLng(),
-      radius: 2,
+      radius: Math.ceil(calculateRadius() >= 30 ? 0 : calculateRadius()),
       categoty: "",
       page: 1,
-      count: 10,
+      count: 30,
     },
     (response) => {
       workspaces.value = response.data.data;
       if (workspaces.value == null) {
         // TODO 검색 결과가 없음을 표시
+        workspaces.value = [];
         return;
       }
       refreshBoundsAndMarkers(workspaces.value);
@@ -83,9 +134,27 @@ const searchWorkspaces = async () => {
   );
 };
 
+const searchWorkspaceOne = async (poiId) => {
+  let result;
+  await workspaceApi.search(
+    poiId,
+    (response) => {
+      if (response.data.data == null) {
+        // TODO 검색 결과가 없음을 표시
+        return;
+      }
+      result = response.data.data;
+    },
+    (error) => {
+      console.log(error);
+    }
+  );
+  return result;
+};
+
 // map options start
-let currentMarkers = [];
-let currentBounds;
+let currentMarkers = ref([]);
+let currentBounds = ref([]);
 
 const coordinate = {
   lat: 37.566826,
@@ -96,22 +165,125 @@ const map = ref();
 
 const onLoadKakaoMap = (mapRef) => {
   map.value = mapRef;
-  currentBounds = new kakao.maps.LatLngBounds();
+  currentBounds.value = new kakao.maps.LatLngBounds();
 };
 // map options end
 const refreshBoundsAndMarkers = (workspaces) => {
-  currentMarkers = workspaces.map((workspace) => {
+  currentMarkers.value = workspaces.map((workspace) => {
     // bound
     let bound = new kakao.maps.LatLng(workspace.latitude, workspace.longitude);
-    currentBounds.extend(bound);
+    currentBounds.value.extend(bound);
+    workspace.bound = bound;
 
     // marker
-    let marker = new kakao.maps.Marker({ position: bound });
-    marker.setMap(map.value);
+    let marker = {
+      lat: bound.getLat(),
+      lng: bound.getLng(),
+      poiId: workspace.poiId,
+      content: "",
+      visible: false,
+    };
+
+    workspace.marker = marker;
     return marker;
   });
 
-  map.value.setBounds(currentBounds);
+  map.value.setBounds(currentBounds.value);
+};
+
+const markerMouseOut = (marker) => {
+  marker.visible = false;
+};
+
+let jobs = ["개발자", "디자이너", "기획자"];
+
+const markerMouseOver = async (marker) => {
+  currentMarkers.value.forEach((marker) => (marker.visible = false));
+
+  let result = await searchWorkspaceOne(marker.poiId);
+
+  // 몇명이 일하는가?
+  let workerCount = Math.ceil(Math.random() * 4);
+
+  let currentWorkersHtml = "";
+  for (let index = 0; index < workerCount; index++) {
+    currentWorkersHtml += `
+        <p class="mr-1 px-2 py-1 bg-primary-light rounded-3xl text-white">
+          ${jobs[Math.ceil(Math.random() * (jobs.length - 1))]}
+        </p>
+      `;
+  }
+
+  // 유효한 이미지만 거르기
+  let images = ref([]);
+  for (let index = 0; index < result.imageUrls.length; index++) {
+    let img = new Image();
+    img.onload = function () {
+      console.log("로드됨");
+      images.value.push(result.imageUrls[index]);
+    };
+    img.src = result.imageUrls[index];
+
+    if (images.value.length >= 2) {
+      break;
+    }
+  }
+
+  marker.content = `
+  <div id="markerInfo" class="flex flex-col p-5 w-72">
+        <div class="images flex">
+          <img
+            src="${result.imageUrls[0]}"
+            class="w-1/2 h-24 object-cover mr-0.5"
+          />
+          <img
+            src="${result.imageUrls[1]}"
+            class="w-1/2 h-24 object-cover"
+          />
+        </div>
+        <div class="title font-bold mt-3">${result.name}</div>
+        <p class="text-sm mt-2">익명의 카피바라 ${workerCount}마리가 일하고 있어요!</p>
+        <div class="currentWorkerIcons flex text-xs mt-1 mb-2">
+          ${currentWorkersHtml}
+        </div>
+        <div class="myPlace flex flex-col text-sm mt-1 mb-2">
+          <p>내가 방문한 장소예요!</p>
+          <p>
+            <span class="font-semibold">최근 방문 일자</span> : 24.05.03/13:00
+          </p>
+        </div>
+        <div class="ratingAndKeywords flex text-sm items-center flex-wrap">
+          <p class="mr-2">⭐️ ${
+            result.rating == null || result.rating == ""
+              ? Math.round((3 + Math.random() * 2) * 100) / 100
+              : result.rating
+          }</p>
+          <p
+            class="mr-1 px-2 py-1 text-xs bg-primary-light rounded-3xl text-white"
+          >
+            사람이 많은
+          </p>
+          <p
+            class="mr-1 px-2 py-1 text-xs bg-primary-light rounded-3xl text-white"
+          >
+            집중이 잘 되는
+          </p>
+          <p
+            class="mr-1 px-2 py-1 text-xs bg-primary-light rounded-3xl text-white"
+          >
+            조용한
+          </p>
+        </div>
+      </div>
+  `;
+
+  marker.visible = true;
+
+  setInterval(100, () => {
+    document.getElementById(
+      "markerInfo"
+    ).parentNode.parentNode.style.borderRadius = "10px";
+  });
 };
 </script>
 
@@ -286,8 +458,22 @@ const refreshBoundsAndMarkers = (workspaces) => {
         width="100vw"
         height="calc(100vh - 70px)"
         :class="['transition-width duration-500']"
+        style="z-index: 0"
         @onLoadKakaoMap="onLoadKakaoMap"
       >
+        <KakaoMapMarker
+          v-for="(marker, index) in currentMarkers"
+          :key="marker.poiId"
+          :lat="marker.lat"
+          :lng="marker.lng"
+          :infoWindow="{
+            content: marker.content,
+            visible: marker.visible,
+          }"
+          :clickable="true"
+          @on-click-kakao-map-marker="markerMouseOver(marker)"
+        >
+        </KakaoMapMarker>
       </KakaoMap>
     </div>
   </div>
