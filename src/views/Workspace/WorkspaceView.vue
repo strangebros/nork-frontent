@@ -11,7 +11,7 @@ const route = useRoute();
 
 const state = reactive({
   currentTab: "reservation",
-  poiId: route.query.poiId || "10533497", // Set default poiId to 10533497
+  poiId: route.query.poiId || "10533498", // Set default poiId to 10533497
   officeImage: "",
   officeName: "",
   roadAddress: "",
@@ -169,7 +169,9 @@ async function fetchReviews() {
       <div class="flex flex-col lg:flex-row gap-10">
         <!-- 예약 날짜 파트 -->
         <div class="flex flex-col w-full lg:w-1/2">
-          <label class="text-xl font-semibold mb-4">예약 날짜</label>
+          <label class="text-xl font-semibold mb-4"
+            >언제 일을 하실 건가요?</label
+          >
           <input
             type="date"
             v-model="state.reservationDate"
@@ -221,7 +223,9 @@ async function fetchReviews() {
 
         <!-- 예약 시간 파트 -->
         <div class="flex flex-col w-full lg:w-1/2">
-          <label class="text-xl font-semibold mb-4">예약 시간</label>
+          <label class="text-xl font-semibold mb-4"
+            >얼마 동안 일하실 건 가요?</label
+          >
           <div
             class="flex justify-center items-center text-2xl font-bold mt-4 mb-8 h-10"
           >
@@ -271,10 +275,10 @@ async function fetchReviews() {
 
       <!-- 할 일 텍스트 박스 -->
       <div class="w-full mt-6">
-        <label class="text-xl font-semibold mb-4">할 일</label>
+        <label class="text-xl font-semibold mb-4">어떤 일을 하실 건가요?</label>
         <textarea
           v-model="state.taskDescription"
-          placeholder="할 일을 적어주세요"
+          placeholder="ex: API 명세서 작성하기, 디자인 시스템 만들기 ..."
           class="border p-4 rounded w-full h-32 text-lg dark:text-black mt-4"
         ></textarea>
       </div>
