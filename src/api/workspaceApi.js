@@ -13,6 +13,9 @@ const workspaceApi = {
       .then(success)
       .catch(error);
   },
+  async searchByWorkspaceId(workspaceId, success, error) {
+    await client.get(`/${workspaceId}`).then(success).catch(error);
+  },
   async searchAll(request, success, error) {
     await client
       .get(`/search`, {
