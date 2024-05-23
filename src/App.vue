@@ -14,7 +14,7 @@ const showHeader = computed(() => layoutStore.showHeader);
 </script>
 
 <template>
-  <div class="h-screen" :class="{ dark: darkMode }">
+  <div class="" :class="{ dark: darkMode }">
     <Header v-if="showHeader" />
     <RouterView class="h-full bg-background-light dark:bg-background-dark" />
   </div>

@@ -18,12 +18,13 @@ const reservationApi = {
   async findAll(requestDto, success, error) {
     await client
       .get(``, {
-        params: {
-          requestDto,
-        },
+        params: requestDto,
       })
       .then(success)
       .catch(error);
+  },
+  async delete(reservationId, success, error) {
+    await client.delete(`/${reservationId}`).then(success).catch(error);
   },
 };
 

@@ -217,6 +217,7 @@ function sendReview() {
   workApi.end(
     reviewForm.value,
     (response) => {
+      window.removeEventListener("beforeunload");
       router.push({ name: "Mypage" });
     },
     (error) => {
