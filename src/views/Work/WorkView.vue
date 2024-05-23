@@ -49,7 +49,7 @@ function openConfirmModal() {
 }
 
 // 리뷰 관련 start
-const isReviewOpen = ref(true);
+const isReviewOpen = ref(false);
 
 function closeReviewModal() {
   isReviewOpen.value = false;
@@ -300,7 +300,7 @@ const reviewForm = ref({
                   <button
                     type="button"
                     class="inline-flex justify-center rounded-md border border-transparent bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-white hover:bg-opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                    @click="profileImageConfirm"
+                    @click="openReviewModal"
                   >
                     종료하기
                   </button>
@@ -320,7 +320,7 @@ const reviewForm = ref({
     </TransitionRoot>
     <!-- 리뷰 작성 모달 -->
     <TransitionRoot appear :show="isReviewOpen" as="template">
-      <Dialog as="div" @close="closeReviewModal" class="relative z-10">
+      <Dialog as="div" class="relative z-10">
         <TransitionChild
           as="template"
           enter="duration-300 ease-out"
@@ -434,7 +434,9 @@ const reviewForm = ref({
                 <div class="mt-5">
                   <p class="mb-1">✅ 키워드 선택</p>
                   <p class="text-sm text-gray-500 mb-2">
-                    이 장소를 가장 잘 나타내는 키워드들을 선택해 주세요!
+                    이 장소를 가장 잘 나타내는 키워드들을 선택해 주세요! ({{
+                      reviewForm.keywords.size
+                    }}/3)
                   </p>
                   <div class="flex flex-wrap">
                     <template v-for="keyword in keywords">
@@ -462,6 +464,8 @@ const reviewForm = ref({
                         @click="
                           reviewForm.keywords.has(keyword.id)
                             ? reviewForm.keywords.delete(keyword.id)
+                            : reviewForm.keywords.size >= 3
+                            ? null
                             : reviewForm.keywords.add(keyword.id)
                         "
                       >
@@ -477,13 +481,6 @@ const reviewForm = ref({
                     @click="sendReview"
                   >
                     등록
-                  </button>
-                  <button
-                    type="button"
-                    class="mt-2 text-xs underline text-gray-500"
-                    @click="closeReviewModal"
-                  >
-                    건너뛰기
                   </button>
                 </div>
               </DialogPanel>

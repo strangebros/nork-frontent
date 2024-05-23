@@ -3,6 +3,12 @@ import { useRouter } from "vue-router";
 import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
 
+import memberApi from "@/api/memberApi";
+const authStore = useAuthStore();
+const { member } = storeToRefs(authStore);
+
+let memberInfo = ref(null);
+
 import tmapApi from "@/api/tmapApi";
 
 // tailwind
@@ -47,8 +53,6 @@ import {
 } from "@heroicons/vue/20/solid";
 import { useAuthStore } from "@/stores/auth";
 
-const authStore = useAuthStore();
-const { member } = storeToRefs(authStore);
 const themeStore = useThemeStore();
 const router = useRouter();
 const { darkMode } = storeToRefs(themeStore);
@@ -93,11 +97,11 @@ const keywordOptions = [
   },
   {
     value: "1",
-    label: "시끄러운",
+    label: "쾌적한",
   },
   {
     value: "2",
-    label: "신나는",
+    label: "적당한 소음이 있는",
   },
 ];
 
@@ -119,6 +123,14 @@ const toMap = () => {
     },
   });
 };
+memberApi.getMemberInfo(
+  member.value.id,
+  (response) => {
+    memberInfo.value = response.data.data;
+    console.log(memberInfo);
+  },
+  (error) => {}
+);
 </script>
 
 <template>
@@ -198,10 +210,18 @@ const toMap = () => {
       >
         <p class="mr-3">
           <span v-if="member != null">{{ member.nickname }}님, </span>최근
-          <span class="font-semibold">'개발자'</span> 직군에서 핫한 장소들
-          어떠신가요?
+          <span class="font-semibold">'{{ memberInfo.position }}'</span>
+          직군에서 핫한 장소들 어떠신가요?
         </p>
-        <button class="bg-primary-light text-white px-3 py-2 rounded-lg">
+        <button
+          class="bg-primary-light text-white px-3 py-2 rounded-lg"
+          @click="
+            $router.push({
+              name: 'Map',
+              query: { position: memberInfo.position },
+            })
+          "
+        >
           추천받기
         </button>
       </div>
@@ -395,7 +415,7 @@ const toMap = () => {
               <RadioGroupLabel class="ml-1 font-semibold"
                 >어떤 장소에 가고 싶나요?</RadioGroupLabel
               >
-              <div class="space-y-2 w-24 mt-2">
+              <div class="space-y-2 w-30 flex flex-col mt-2">
                 <RadioGroupOption
                   as="template"
                   v-for="option in keywordOptions"

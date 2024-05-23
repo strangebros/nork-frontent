@@ -214,14 +214,14 @@ const signup = async () => {
           </div>
           <div class="w-1/2 flex flex-col">
             <label class="text-xs font-semibold mb-0.5" for="id">
-              아이디
+              이메일
             </label>
             <input
               id="id"
               type="text"
               v-model.trim="signupForm.email"
               required
-              placeholder="아이디"
+              placeholder="이메일"
               class="signup-input"
             />
 

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useThemeStore } from "@/stores/theme";
 import { useAuthStore } from "@/stores/auth";
 import memberApi from "@/api/memberApi";
@@ -8,6 +8,7 @@ import { storeToRefs } from "pinia";
 import defaultProfileImage from "@/assets/img/default_profile_image";
 
 let route = useRoute();
+let router = useRouter();
 let isMain = ref(true);
 
 watch(
@@ -65,24 +66,24 @@ const logout = () => {
 };
 
 const toggleTheme = () => {
-  let prevDark = darkMode;
+  let prevDark = darkMode.value;
   themeStore.toggleTheme();
 
   if (prevDark) {
-    themeIconClass.value = "fas fa-sun rotating-icon";
-    setTimeout(() => {
-      themeIconClass.value = "fas fa-moon rotating-icon";
-    }, 250); // Halfway through the animation (0.25s)
-  } else {
     themeIconClass.value = "fas fa-moon rotating-icon";
     setTimeout(() => {
       themeIconClass.value = "fas fa-sun rotating-icon";
+    }, 250); // Halfway through the animation (0.25s)
+  } else {
+    themeIconClass.value = "fas fa-sun rotating-icon";
+    setTimeout(() => {
+      themeIconClass.value = "fas fa-moon rotating-icon";
     }, 250); // Halfway through the animation (0.25s)
   }
 
   // Remove the rotation class after the animation is complete
   setTimeout(() => {
-    themeIconClass.value = prevDark ? "fas fa-moon" : "fas fa-sun";
+    themeIconClass.value = prevDark ? "fas fa-sun" : "fas fa-moon";
   }, 500); // Rotation animation duration
 };
 </script>
@@ -151,6 +152,7 @@ const toggleTheme = () => {
                         : 'text-primary-900',
                       'group flex w-full items-center rounded-md px-2 py-2 text-sm',
                     ]"
+                    @click="router.push({ name: 'Mypage' })"
                   >
                     마이페이지
                   </button>
