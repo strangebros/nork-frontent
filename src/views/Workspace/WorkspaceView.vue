@@ -1,11 +1,13 @@
 <script setup>
-import { reactive, onMounted } from "vue";
+import { reactive, onMounted, watch } from "vue";
 import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import workspaceApi from "@/api/workspaceApi";
-import reservationApi from "@/api/reservationApi";
+import reviewsApi from "@/api/reviewsApi";
+import reservationApi from "@/api/reservationApi"; // 예약 API 임포트
 import cafeImage from "@/assets/img/workspace/cafe_1.jpg";
+import draggable from "vuedraggable"; // 추가: vuedraggable import
 
 const themeStore = useThemeStore();
 const { darkMode } = storeToRefs(themeStore);
@@ -14,7 +16,7 @@ const route = useRoute();
 const state = reactive({
   currentTab: "reservation",
   poiId: route.params.poiId || "10533498",
-  workspaceId: "",
+  workspaceId: null,
   officeImage: cafeImage,
   officeName: "",
   roadAddress: "",
@@ -28,51 +30,87 @@ const state = reactive({
   profiles: [],
   reviews: [],
   lastAdjusted: { hours: 1, minutes: 30 },
+  reviewPage: 1,
+  reviewCount: 5,
+  hasMoreReviews: true,
+  keywords: [], // 추가: keywords 상태
+  currentKeyword: "" // 추가: currentKeyword 상태
 });
 
 async function fetchWorkspaceData() {
-  console.log("poiID 값:", state.poiId),
-    workspaceApi.search(
-      state.poiId,
-      (response) => {
-        const data = response.data.data;
+  console.log("poiID 값:", state.poiId);
+  workspaceApi.search(
+    state.poiId,
+    (response) => {
+      const data = response.data.data;
 
-        console.log("Workspace data:", data);
+      console.log("Workspace data:", data);
 
-        state.workspaceId = data.id || null;
-        state.officeName = data.name || "Unknown";
-        state.roadAddress = data.roadAddress || " - ";
-        state.category = data.category || " - ";
-        state.rating = data.rating != null ? data.rating : " - ";
+      state.officeName = data.name || "Unknown";
+      state.roadAddress = data.roadAddress || "No address";
+      state.category = data.category || "No category";
+      state.rating = data.rating != null ? data.rating : "No rating";
+      state.workspaceId = data.id;
 
-        // if (Array.isArray(data.imageUrls) && data.imageUrls.length > 0) {
-        //   state.officeImage = data.imageUrls[0];
-        // } else {
-        //   state.officeImage = cafeImage; // Use local cafe image as default
-        // }
-
+      if (Array.isArray(data.imageUrls) && data.imageUrls.length > 0) {
+        state.officeImage = "data:image/png;base64," + data.imageUrls[0];
+      } else {
         state.officeImage = cafeImage; // Use local cafe image as default
-
-        if (Array.isArray(data.currentWorkers)) {
-          state.profiles = data.currentWorkers.map((worker) => ({
-            id: worker.id,
-            image: worker.imageUrl,
-            role: worker.role,
-            time: worker.time,
-          }));
-        } else {
-          state.profiles = [];
-        }
-      },
-      (error) => {
-        console.error("Error fetching workspace data:", error);
       }
-    );
+
+      if (Array.isArray(data.currentWorkers)) {
+        state.profiles = data.currentWorkers.map((worker) => ({
+          id: worker.id,
+          image: worker.imageUrl,
+          role: worker.role,
+          time: worker.time,
+        }));
+      } else {
+        state.profiles = [];
+      }
+    },
+    (error) => {
+      console.error("Error fetching workspace data:", error);
+    }
+  );
+}
+
+async function fetchReviews() {
+  if (!state.workspaceId) {
+    console.error("workspaceId is not set");
+    return;
+  }
+
+  reviewsApi.getReviews(
+    state.workspaceId,
+    state.reviewPage,
+    state.reviewCount,
+    (response) => {
+      const newReviews = response.data.data;
+      if (newReviews.length < state.reviewCount) {
+        state.hasMoreReviews = false;
+      }
+      state.reviews = [...state.reviews, ...newReviews];
+      state.reviewPage++;
+    },
+    (error) => {
+      console.error("Error fetching reviews:", error);
+    }
+  );
 }
 
 onMounted(() => {
   fetchWorkspaceData();
 });
+
+watch(
+  () => state.workspaceId,
+  (newVal) => {
+    if (newVal) {
+      fetchReviews();
+    }
+  }
+);
 
 function selectTab(tab) {
   state.currentTab = tab;
@@ -100,12 +138,23 @@ function adjustTime(amount, unit) {
   }
 }
 
+function addKeyword() {
+  if (state.currentKeyword.trim() !== "") {
+    state.keywords.push(state.currentKeyword.trim());
+    state.currentKeyword = "";
+  }
+}
+
+function removeKeyword(index) {
+  state.keywords.splice(index, 1);
+}
+
 async function registerReservation() {
   const reservationData = {
     workspaceId: state.workspaceId,
     visitStartDate: state.reservationDate,
     visitTimeslot: state.selectedTime,
-    activity: state.taskDescription,
+    activity: state.keywords.join(", "),
     activityDuration: state.hours * 60 + state.minutes,
   };
 
@@ -131,9 +180,12 @@ function clearForm() {
   state.taskDescription = "";
 }
 
-async function fetchReviews() {
-  // Implement review fetching logic if needed
+function loadMoreReviews() {
+  if (state.hasMoreReviews) {
+    fetchReviews();
+  }
 }
+
 </script>
 
 <template>
@@ -299,18 +351,31 @@ async function fetchReviews() {
         </div>
       </div>
 
-      <!-- 할 일 텍스트 박스 -->
+      <!-- 할 일 텍스트 및 키워드 -->
       <div class="w-full mt-6">
-        <label class="text-xl font-semibold mb-4"
-          >어떤 일들을 하러 가는건가요?</label
-        >
-        <textarea
-          v-model="state.taskDescription"
+        <label class="text-xl font-semibold mb-4">어떤 일들을 하러 가는건가요?</label>
+        <draggable v-model="state.keywords" class="flex flex-wrap gap-2 mb-4">
+          <template #item="{ element, index }">
+            <div
+              class="bg-primary-light text-onPrimary-light px-3 py-1 rounded-full flex items-center"
+            >
+              <span>{{ element }}</span>
+              <button
+                @click="removeKeyword(index)"
+                class="ml-2 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center"
+              >
+                x
+              </button>
+            </div>
+          </template>
+        </draggable>
+        <input
+          v-model="state.currentKeyword"
+          @keyup.enter="addKeyword"
           placeholder="ex) 프로젝트 API 명세서 작성, 디자인 시스템 개발 ..."
-          class="border p-4 rounded w-full h-32 text-lg dark:text-black mt-4"
-        ></textarea>
+          class="border p-4 rounded w-full text-lg dark:text-black mt-4"
+        />
       </div>
-
       <!-- 등록 및 취소 버튼 -->
       <div class="flex justify-center gap-6 mt-6">
         <button
@@ -333,8 +398,10 @@ async function fetchReviews() {
       v-if="state.currentTab === 'details'"
       class="p-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-10"
     >
+      <!-- 프로필 섹션 -->
       <div class="profiles w-full md:w-1/2 overflow-y-auto">
         <div
+          v-if="state.profiles.length > 0"
           v-for="profile in state.profiles"
           :key="profile.id"
           class="profile mb-5 flex flex-col items-center"
@@ -342,21 +409,52 @@ async function fetchReviews() {
           <img
             :src="profile.image"
             alt="Profile Image"
-            class="w-20 h-20 rounded-full mb-2"
+            class="w-24 h-24 rounded-full mb-2"
           />
           <p class="font-semibold text-lg">{{ profile.role }}</p>
           <p>{{ profile.time }}</p>
         </div>
+        <div v-else class="text-center text-lg">
+          앗, 아직 아무도 이 워크스페이스에서 일하지 않고 있어요!
+        </div>
       </div>
+
+      <!-- 리뷰 섹션 -->
       <div class="reviews w-full md:w-1/2 overflow-y-auto">
         <div
           v-for="review in state.reviews"
           :key="review.id"
           class="review-card border p-4 rounded mb-3"
         >
-          <p class="font-semibold text-lg">{{ review.date }}</p>
-          <p>Rating: {{ review.rating }}</p>
-          <p>{{ review.comment }}</p>
+          <div class="flex items-center mb-2">
+            <p class="text-sm text-gray-500">
+              {{ new Date(review.startDatetime).toLocaleString() }} - {{ new Date(review.endDatetime).toLocaleString() }}
+            </p>
+          </div>
+          <p class="text-sm mb-2">
+            <i class="fas fa-star text-yellow-400"></i> {{ review.rating }}
+          </p>
+          <p class="mb-2">{{ review.reviewText }}</p>
+          <div class="flex flex-wrap">
+            <span
+              v-for="keyword in review.keywords"
+              :key="keyword.reviewKeywordId"
+              class="bg-primary-light text-white px-2 py-1 rounded-full text-xs mr-2 mb-2"
+            >
+              {{ keyword.value }}
+            </span>
+          </div>
+        </div>
+        <div v-if="state.hasMoreReviews" class="flex justify-center mt-4">
+          <button
+            @click="loadMoreReviews"
+            class="px-4 py-2 bg-primary-light text-white rounded-lg"
+          >
+            더 보기
+          </button>
+        </div>
+        <div v-else class="text-center text-lg mt-4">
+          더 이상 리뷰가 없습니다.
         </div>
       </div>
     </div>
