@@ -100,9 +100,9 @@ const toggleTheme = () => {
         'justify-between': !isMain,
       }"
     >
-      <router-link v-if="!isMain" to="/" class="logo">
+      <a v-if="!isMain" href="/" class="logo">
         <img src="@/assets/img/logo/navbar_logo.svg" alt="Logo" />
-      </router-link>
+      </a>
       <div class="right-section">
         <button
           class="theme-button color-primary-light dark:color-primary-dark"
