@@ -1,25 +1,33 @@
 <template>
-  <div class="chatbot-container">
-    <div class="chatbot-icon" @click.stop="toggleChat">💬</div>
-    <div v-if="isChatOpen" class="chatbot" @click.stop>
-      <div class="messages" ref="messagesContainer">
-        <div
-          v-for="message in messages"
-          :key="message.id"
-          :class="['message', message.sender]"
-        >
-          {{ message.text }}
+  <div class="chatbot-container fixed bottom-5 right-5">
+    <div class="chatbot-icon bg-primary-light dark:bg-primary-dark text-white p-4 rounded-full shadow-lg cursor-pointer" @click.stop="toggleChat">💬</div>
+    <transition name="fade">
+      <div v-if="isChatOpen" class="chatbot bg-surface-light dark:bg-surface-dark rounded-xl shadow-xl flex flex-col w-350px max-h-[70vh] overflow-hidden">
+        <div class="messages flex-1 p-4 overflow-y-auto" ref="messagesContainer">
+          <div
+            v-for="message in messages"
+            :key="message.id"
+            :class="[
+              'message p-3 my-2 rounded-lg max-w-[70%]',
+              message.sender === 'user' ? 'bg-secondary-light text-onSecondary-light ml-auto' : 'bg-primary-light text-onPrimary-light mr-auto'
+            ]"
+          >
+            {{ message.text }}
+          </div>
+          <div v-if="isLoading" class="loading text-center text-primary-light dark:text-primary-dark my-2">
+            <span>생각중..</span>
+          </div>
         </div>
-        <div v-if="isLoading" class="loading">
-          <span>생각중..</span>
+        <div class="p-3 border-t border-gray-200 dark:border-gray-700 flex items-center">
+          <input
+            v-model="newMessage"
+            @keyup.enter="sendMessage"
+            placeholder="메시지를 입력하세요..."
+            class="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+          />
         </div>
       </div>
-      <input
-        v-model="newMessage"
-        @keyup.enter="sendMessage"
-        placeholder="메시지를 입력하세요..."
-      />
-    </div>
+    </transition>
   </div>
 </template>
 
@@ -163,7 +171,7 @@ const generateBotResponse = async () => {
   bottom: 80px;
   right: 20px;
   width: 350px;
-  max-height: 500px;
+  max-height: 70vh;
   border: 1px solid #ccc;
   border-radius: 10px;
   background-color: white;
