@@ -9,7 +9,7 @@ import workspaceApi from "@/api/workspaceApi";
 import { KakaoMap, KakaoMapMarker } from "vue3-kakao-maps";
 
 // tailwind
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import {
   Combobox,
   ComboboxInput,
@@ -142,6 +142,26 @@ const searchWorkspaces = async (move, radius) => {
   nowLoading.value = false;
 };
 
+const searchPopularWorkspaces = async (position) => {
+  nowLoading.value = true;
+  await workspaceApi.searchAll(
+    position,
+    (response) => {
+      workspaces.value = response.data.data;
+      if (workspaces.value == null) {
+        // TODO 검색 결과가 없음을 표시
+        workspaces.value = [];
+        return;
+      }
+      refreshBoundsAndMarkers(workspaces.value);
+    },
+    (error) => {
+      console.log(error);
+    }
+  );
+  nowLoading.value = false;
+};
+
 const searchWorkspaceOne = async (poiId) => {
   let result;
   await workspaceApi.search(
@@ -170,13 +190,43 @@ const coordinate = {
 };
 
 const map = ref();
+let currentPos = ref({});
+
+onMounted(
+  async () => {
+    await navigator.geolocation.getCurrentPosition((pos) => {
+      currentPos.value = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      };
+    });
+  },
+  (error) => {
+    console.log(error);
+  }
+);
 
 const onLoadKakaoMap = (mapRef) => {
   map.value = mapRef;
   currentBounds.value = new kakao.maps.LatLngBounds();
 
-  // 메인 페이지에서 넘어온 경우, 바로 검색 수행
+  console.log(currentPos.value);
+
+  // map.value.panTo(
+  //   new kakao.maps.LatLng(currentPos.value.lat, currentPos.value.lng)
+  // );
+
+  // 추천 검색의 경우
+  if (route.query.position != null && route.query.position != "") {
+    selectedQuery.value = route.query.position;
+    query.value = route.query.position;
+
+    searchPopularWorkspaces(route.query.position);
+    return;
+  }
+
   if (route.query.query != null && route.query.query != "") {
+    // 메인 페이지에서 넘어온 경우, 바로 검색 수행
     // 값 설정
     selectedQuery.value = route.query.query;
     query.value = route.query.query;
@@ -260,11 +310,7 @@ const markerMouseOver = async (marker) => {
         <div class="images flex">
           <img
             src="${result.imageUrls[0]}"
-            class="w-1/2 h-24 object-cover mr-0.5"
-          />
-          <img
-            src="${result.imageUrls[1]}"
-            class="w-1/2 h-24 object-cover"
+            class="w-full h-24 object-cover mr-0.5"
           />
         </div>
         <div class="title font-bold mt-3">${result.name}</div>
@@ -529,8 +575,8 @@ const clickSearchBarWorkspace = (workspace) => {
         현 위치에서 재검색
       </button>
       <KakaoMap
-        :lat="coordinate.lat"
-        :lng="coordinate.lng"
+        :lat="36.3552"
+        :lng="127.2981"
         :draggable="true"
         width="100vw"
         height="calc(100vh - 70px)"

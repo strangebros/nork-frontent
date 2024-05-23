@@ -283,7 +283,14 @@ function openModal() {
                 <button
                   type="button"
                   class="z-20 inline-flex mr-2 justify-center rounded-md border border-transparent bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-white hover:bg-opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                  @click="startWork"
+                  @click="
+                    $router.push({
+                      name: 'Work',
+                      query: {
+                        reservationId: reservation.id,
+                      },
+                    })
+                  "
                 >
                   시작하기
                 </button>

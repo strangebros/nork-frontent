@@ -24,6 +24,14 @@ const workspaceApi = {
       .then(success)
       .catch(error);
   },
+  async searchPopulars(position, success, error) {
+    await client
+      .get(`/popular`, {
+        position,
+      })
+      .then(success)
+      .catch(error);
+  },
 };
 
 export default workspaceApi;
