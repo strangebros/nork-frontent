@@ -32,7 +32,7 @@ const router = createRouter({
       component: WorkView,
     },
     {
-      path: "/workspace",
+      path: "/workspaces/:poiId",
       name: "Workspace",
       component: WorkspaceView,
     },

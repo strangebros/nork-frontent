@@ -2,7 +2,10 @@ import { norkAxios } from "@/util/http-commons";
 
 const client = norkAxios("/reservations");
 
-const reservationApi = {
+
+  async createReservation(data, success, error) {
+    await client.post("", data).then(success).catch(error);
+
   async findOne(reservationId, success, error) {
     await client.get(`/${reservationId}`).then(success).catch(error);
   },
@@ -24,6 +27,7 @@ const reservationApi = {
       })
       .then(success)
       .catch(error);
+
   },
 };
 

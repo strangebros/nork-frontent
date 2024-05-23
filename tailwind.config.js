@@ -13,6 +13,9 @@ export default {
         "map-side": "calc(100vw - 350px)",
         "map-noside": "100vw",
       },
+      minHeight: {
+        workspace: "120vh",
+      },
       colors: {
         text: "#424242",
         primary: {
