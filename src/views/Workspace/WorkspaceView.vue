@@ -3,7 +3,9 @@ import { reactive, onMounted } from "vue";
 import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
-import workspaceApi from "@/api/workspaceApi"; // Import workspaceApi correctly
+import workspaceApi from "@/api/workspaceApi";
+import reservationApi from "@/api/reservationApi";
+import cafeImage from "@/assets/img/workspace/cafe_1.jpg";
 
 const themeStore = useThemeStore();
 const { darkMode } = storeToRefs(themeStore);
@@ -11,8 +13,9 @@ const route = useRoute();
 
 const state = reactive({
   currentTab: "reservation",
-  poiId: route.query.poiId || "10533498", // Set default poiId to 10533497
-  officeImage: "",
+  poiId: route.params.poiId || "10533498",
+  workspaceId: "",
+  officeImage: cafeImage,
   officeName: "",
   roadAddress: "",
   category: "",
@@ -28,39 +31,43 @@ const state = reactive({
 });
 
 async function fetchWorkspaceData() {
-  workspaceApi.search(
-    state.poiId,
-    (response) => {
-      const data = response.data.data;
+  console.log("poiID 값:", state.poiId),
+    workspaceApi.search(
+      state.poiId,
+      (response) => {
+        const data = response.data.data;
 
-      console.log("Workspace data:", data); // Log the response data
+        console.log("Workspace data:", data);
 
-      state.officeName = data.name || "Unknown";
-      state.roadAddress = data.roadAddress || "No address";
-      state.category = data.category || "No category";
-      state.rating = data.rating != null ? data.rating : "No rating";
+        state.workspaceId = data.id || null;
+        state.officeName = data.name || "Unknown";
+        state.roadAddress = data.roadAddress || " - ";
+        state.category = data.category || " - ";
+        state.rating = data.rating != null ? data.rating : " - ";
 
-      if (Array.isArray(data.imageUrls) && data.imageUrls.length > 0) {
-        state.officeImage = data.imageUrls[0];
-      } else {
-        state.officeImage = ""; // default image or placeholder
+        // if (Array.isArray(data.imageUrls) && data.imageUrls.length > 0) {
+        //   state.officeImage = data.imageUrls[0];
+        // } else {
+        //   state.officeImage = cafeImage; // Use local cafe image as default
+        // }
+
+        state.officeImage = cafeImage; // Use local cafe image as default
+
+        if (Array.isArray(data.currentWorkers)) {
+          state.profiles = data.currentWorkers.map((worker) => ({
+            id: worker.id,
+            image: worker.imageUrl,
+            role: worker.role,
+            time: worker.time,
+          }));
+        } else {
+          state.profiles = [];
+        }
+      },
+      (error) => {
+        console.error("Error fetching workspace data:", error);
       }
-
-      if (Array.isArray(data.currentWorkers)) {
-        state.profiles = data.currentWorkers.map((worker) => ({
-          id: worker.id,
-          image: worker.imageUrl, // assuming there is an imageUrl field in worker data
-          role: worker.role,
-          time: worker.time, // assuming there is a time field in worker data
-        }));
-      } else {
-        state.profiles = [];
-      }
-    },
-    (error) => {
-      console.error("Error fetching workspace data:", error);
-    }
-  );
+    );
 }
 
 onMounted(() => {
@@ -93,9 +100,27 @@ function adjustTime(amount, unit) {
   }
 }
 
-function registerReservation() {
-  // Call the reservation API with the collected data
-  // Example: axios.post('/api/reservations', { ... })
+async function registerReservation() {
+  const reservationData = {
+    workspaceId: state.workspaceId,
+    visitStartDate: state.reservationDate,
+    visitTimeslot: state.selectedTime,
+    activity: state.taskDescription,
+    activityDuration: state.hours * 60 + state.minutes,
+  };
+
+  reservationApi.createReservation(
+    reservationData,
+    (response) => {
+      console.log("Reservation created:", response.data);
+      clearForm();
+      alert("예약이 성공적으로 등록되었습니다.");
+    },
+    (error) => {
+      console.error("Error creating reservation:", error);
+      alert("예약 등록에 실패했습니다. 다시 시도해 주세요.");
+    }
+  );
 }
 
 function clearForm() {
@@ -119,21 +144,24 @@ async function fetchReviews() {
       'text-onBackground-light': !darkMode,
       'text-onBackground-dark': darkMode,
     }"
-    class="min-h-screen"
+    class="min-h-workspace"
   >
-    <div class="navbar bg-header-light dark:bg-header-dark">
-      <!-- This is the placeholder for the existing navbar -->
-    </div>
-
     <div class="relative text-center">
-      <img :src="state.officeImage" alt="Office Image" class="w-full h-auto" />
       <div
-        class="absolute top-5 left-5 text-onSurface-light dark:text-onSurface-dark"
+        :style="{ backgroundImage: `url(${state.officeImage || cafeImage})` }"
+        class="w-full h-96 bg-cover bg-center relative"
       >
-        <h1 class="text-4xl font-bold">{{ state.officeName }}</h1>
-        <p class="text-2xl">{{ state.roadAddress }}</p>
-        <p class="text-2xl">{{ state.category }}</p>
-        <p class="text-2xl">Rating: {{ state.rating }}</p>
+        <div class="absolute inset-0 bg-black opacity-50"></div>
+        <div class="absolute bottom-5 left-5 text-white text-left">
+          <h1 class="text-4xl font-bold">
+            {{ state.officeName }}
+            <span class="text-xl font-light">{{ state.category }}</span>
+          </h1>
+          <p class="text-2xl">{{ state.roadAddress }}</p>
+          <p class="text-2xl">
+            <i class="fas fa-star text-yellow-400"></i> {{ state.rating }}
+          </p>
+        </div>
       </div>
     </div>
 
@@ -169,9 +197,7 @@ async function fetchReviews() {
       <div class="flex flex-col lg:flex-row gap-10">
         <!-- 예약 날짜 파트 -->
         <div class="flex flex-col w-full lg:w-1/2">
-          <label class="text-xl font-semibold mb-4"
-            >언제 일을 하실 건가요?</label
-          >
+          <label class="text-xl font-semibold mb-4">언제 떠나 볼까요?</label>
           <input
             type="date"
             v-model="state.reservationDate"
@@ -179,40 +205,40 @@ async function fetchReviews() {
           />
           <div class="flex justify-around mt-3">
             <button
-              @click="selectTime('dawn')"
+              @click="selectTime('새벽')"
               :class="{
                 'bg-primary-light dark:bg-primary-dark text-onPrimary-light dark:text-onPrimary-dark':
-                  state.selectedTime === 'dawn',
+                  state.selectedTime === '새벽',
               }"
               class="px-6 py-3 rounded-lg text-lg mx-2 hover:bg-secondary-light dark:hover:bg-secondary-dark"
             >
               새벽
             </button>
             <button
-              @click="selectTime('morning')"
+              @click="selectTime('오전')"
               :class="{
                 'bg-primary-light dark:bg-primary-dark text-onPrimary-light dark:text-onPrimary-dark':
-                  state.selectedTime === 'morning',
+                  state.selectedTime === '오전',
               }"
               class="px-6 py-3 rounded-lg text-lg mx-2 hover:bg-secondary-light dark:hover:bg-secondary-dark"
             >
               오전
             </button>
             <button
-              @click="selectTime('afternoon')"
+              @click="selectTime('오후')"
               :class="{
                 'bg-primary-light dark:bg-primary-dark text-onPrimary-light dark:text-onPrimary-dark':
-                  state.selectedTime === 'afternoon',
+                  state.selectedTime === '오후',
               }"
               class="px-6 py-3 rounded-lg text-lg mx-2 hover:bg-secondary-light dark:hover:bg-secondary-dark"
             >
               오후
             </button>
             <button
-              @click="selectTime('evening')"
+              @click="selectTime('저녁')"
               :class="{
                 'bg-primary-light dark:bg-primary-dark text-onPrimary-light dark:text-onPrimary-dark':
-                  state.selectedTime === 'evening',
+                  state.selectedTime === '저녁',
               }"
               class="px-6 py-3 rounded-lg text-lg mx-2 hover:bg-secondary-light dark:hover:bg-secondary-dark"
             >
@@ -224,7 +250,7 @@ async function fetchReviews() {
         <!-- 예약 시간 파트 -->
         <div class="flex flex-col w-full lg:w-1/2">
           <label class="text-xl font-semibold mb-4"
-            >얼마 동안 일하실 건 가요?</label
+            >얼마 동안 일 할 예정인가요?</label
           >
           <div
             class="flex justify-center items-center text-2xl font-bold mt-4 mb-8 h-10"
@@ -275,10 +301,12 @@ async function fetchReviews() {
 
       <!-- 할 일 텍스트 박스 -->
       <div class="w-full mt-6">
-        <label class="text-xl font-semibold mb-4">어떤 일을 하실 건가요?</label>
+        <label class="text-xl font-semibold mb-4"
+          >어떤 일들을 하러 가는건가요?</label
+        >
         <textarea
           v-model="state.taskDescription"
-          placeholder="ex: API 명세서 작성하기, 디자인 시스템 만들기 ..."
+          placeholder="ex) 프로젝트 API 명세서 작성, 디자인 시스템 개발 ..."
           class="border p-4 rounded w-full h-32 text-lg dark:text-black mt-4"
         ></textarea>
       </div>
