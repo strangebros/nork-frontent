@@ -1,17 +1,25 @@
 <script setup>
-import { reactive, onMounted, watch } from "vue";
+import { reactive, onMounted, watch, ref } from "vue";
 import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import workspaceApi from "@/api/workspaceApi";
 import reviewsApi from "@/api/reviewsApi";
 import reservationApi from "@/api/reservationApi"; // 예약 API 임포트
 import cafeImage from "@/assets/img/workspace/cafe_1.jpg";
 import draggable from "vuedraggable"; // 추가: vuedraggable import
 
+import {
+  TransitionRoot,
+  TransitionChild,
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+} from "@headlessui/vue";
 const themeStore = useThemeStore();
 const { darkMode } = storeToRefs(themeStore);
 const route = useRoute();
+const router = useRouter();
 
 const state = reactive({
   currentTab: "reservation",
@@ -34,7 +42,7 @@ const state = reactive({
   reviewCount: 5,
   hasMoreReviews: true,
   keywords: [], // 추가: keywords 상태
-  currentKeyword: "" // 추가: currentKeyword 상태
+  currentKeyword: "", // 추가: currentKeyword 상태
 });
 
 async function fetchWorkspaceData() {
@@ -53,7 +61,7 @@ async function fetchWorkspaceData() {
       state.workspaceId = data.id;
 
       if (Array.isArray(data.imageUrls) && data.imageUrls.length > 0) {
-        state.officeImage = "data:image/png;base64," + data.imageUrls[0];
+        state.officeImage = cafeImage;
       } else {
         state.officeImage = cafeImage; // Use local cafe image as default
       }
@@ -138,6 +146,17 @@ function adjustTime(amount, unit) {
   }
 }
 
+const isOpen = ref(false);
+
+function closeModal() {
+  isOpen.value = false;
+  router.push({ name: "Mypage" });
+}
+
+function openModal() {
+  isOpen.value = true;
+}
+
 function addKeyword() {
   if (state.currentKeyword.trim() !== "") {
     state.keywords.push(state.currentKeyword.trim());
@@ -163,7 +182,8 @@ async function registerReservation() {
     (response) => {
       console.log("Reservation created:", response.data);
       clearForm();
-      alert("예약이 성공적으로 등록되었습니다.");
+
+      openModal();
     },
     (error) => {
       console.error("Error creating reservation:", error);
@@ -185,7 +205,6 @@ function loadMoreReviews() {
     fetchReviews();
   }
 }
-
 </script>
 
 <template>
@@ -198,6 +217,61 @@ function loadMoreReviews() {
     }"
     class="min-h-workspace"
   >
+    <TransitionRoot appear :show="isOpen" as="template">
+      <Dialog as="div" @close="closeModal" class="relative z-10">
+        <TransitionChild
+          as="template"
+          enter="duration-300 ease-out"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="duration-200 ease-in"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-black/25" />
+        </TransitionChild>
+
+        <div class="fixed inset-0 overflow-y-auto">
+          <div
+            class="flex min-h-full items-center justify-center p-4 text-center"
+          >
+            <TransitionChild
+              as="template"
+              enter="duration-300 ease-out"
+              enter-from="opacity-0 scale-95"
+              enter-to="opacity-100 scale-100"
+              leave="duration-200 ease-in"
+              leave-from="opacity-100 scale-100"
+              leave-to="opacity-0 scale-95"
+            >
+              <DialogPanel
+                class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all"
+              >
+                <DialogTitle
+                  as="h3"
+                  class="text-lg font-medium leading-6 text-gray-900"
+                >
+                  예약이 완료되었습니다!
+                </DialogTitle>
+                <div class="mt-2">
+                  <p class="text-sm text-gray-500 mb-3">오늘도 힘내세요!</p>
+                </div>
+
+                <div class="mt-4">
+                  <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md border border-transparent bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-white hover:bg-opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    @click="closeModal"
+                  >
+                    확인
+                  </button>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </TransitionRoot>
     <div class="relative text-center">
       <div
         :style="{ backgroundImage: `url(${state.officeImage || cafeImage})` }"
@@ -353,7 +427,9 @@ function loadMoreReviews() {
 
       <!-- 할 일 텍스트 및 키워드 -->
       <div class="w-full mt-6">
-        <label class="text-xl font-semibold mb-4">어떤 일들을 하러 가는건가요?</label>
+        <label class="text-xl font-semibold mb-4"
+          >어떤 일들을 하러 가는건가요?</label
+        >
         <draggable v-model="state.keywords" class="flex flex-wrap gap-2 mb-4">
           <template #item="{ element, index }">
             <div
@@ -428,7 +504,8 @@ function loadMoreReviews() {
         >
           <div class="flex items-center mb-2">
             <p class="text-sm text-gray-500">
-              {{ new Date(review.startDatetime).toLocaleString() }} - {{ new Date(review.endDatetime).toLocaleString() }}
+              {{ new Date(review.startDatetime).toLocaleString() }} -
+              {{ new Date(review.endDatetime).toLocaleString() }}
             </p>
           </div>
           <p class="text-sm mb-2">

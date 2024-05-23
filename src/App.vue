@@ -6,7 +6,6 @@ import Header from "@/components/layout/Header.vue";
 import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
 import ChatBot from "@/components/chatbot/ChatBot.vue";
-import { ref } from "vue";
 
 const isChatOpen = ref(false);
 
@@ -44,7 +43,6 @@ document.addEventListener("click", handleClickOutside);
       @toggleChat="isChatOpen = !isChatOpen"
       @openChat="isChatOpen = true"
     />
-
   </div>
 </template>
 

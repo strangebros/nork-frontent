@@ -123,14 +123,17 @@ const toMap = () => {
     },
   });
 };
-memberApi.getMemberInfo(
-  member.value.id,
-  (response) => {
-    memberInfo.value = response.data.data;
-    console.log(memberInfo);
-  },
-  (error) => {}
-);
+
+if (member.value != null) {
+  memberApi.getMemberInfo(
+    member.value.id,
+    (response) => {
+      memberInfo.value = response.data.data;
+      console.log(memberInfo);
+    },
+    (error) => {}
+  );
+}
 </script>
 
 <template>
@@ -210,7 +213,9 @@ memberApi.getMemberInfo(
       >
         <p class="mr-3">
           <span v-if="member != null">{{ member.nickname }}님, </span>최근
-          <span class="font-semibold">'{{ memberInfo.position }}'</span>
+          <span class="font-semibold"
+            >'{{ memberInfo != null ? memberInfo.position : "개발자" }}'</span
+          >
           직군에서 핫한 장소들 어떠신가요?
         </p>
         <button
