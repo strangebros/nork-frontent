@@ -136,6 +136,7 @@ onMounted(async () => {
       console.log(error);
     }
   );
+  console.log(reviews.value);
 });
 
 const isOpen = ref(false);
